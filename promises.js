@@ -28,17 +28,18 @@ function getInput(){
 };
 
 function printPromiseParamters(){
-    
+    let bool = true;
     let promise1 = new Promise((resolve, reject) => {
-        let bool = false;
         if (bool){
-            console.log(resolve("Work done"));
+            resolve(200);
         }
         else {
-            console.log(reject("Couldn't finish"));
+            reject(404);
         }
-        return;
     });
+    // for (p in promise1)
+    // //     console.log(p);
+    // console.log(promise1);
     promise1.then((ok) => {
         console.log(ok);
     }).catch((err) => {
