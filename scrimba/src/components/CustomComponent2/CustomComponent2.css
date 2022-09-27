@@ -1,0 +1,21 @@
+.CustomComponent-header-nav-img {
+  width: 80px;
+  height: 80px;
+}
+.CustomComponent-header-nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.CustomComponent-header-nav-ul {
+  list-style: none;
+  display:flex;
+  flex-direction: row;
+  align-items: right;
+}
+.CustomComponent-header-nav-ul > li {
+  padding: 20px;
+  color: red;
+}

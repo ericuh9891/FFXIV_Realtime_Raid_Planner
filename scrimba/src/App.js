@@ -1,11 +1,12 @@
 import logo from './logo.svg';
 import './App.css';
-import CustomPage from './CustomPage';
+import CustomPage from './components/CustomPage/CustomPage.js';
+import CustomComponent2 from './components/CustomComponent2/CustomComponent2.js'
 
 function App() {
 	return (
 		<div className="App" style={{textAlign:"left",}}>
-			<CustomPage />
+			<CustomComponent2 />
 		</div>
 	);
 }
