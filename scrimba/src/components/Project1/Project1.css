@@ -1,0 +1,26 @@
+.Project-container {
+  font-family: 'Inter', 'Times New Roman';
+}
+/* top nav bar */
+.Project1-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #1C1E25;
+}
+
+/* React logo and word */
+.Project1-homepage-icon-container {
+  display: flex;
+  align-items: center;
+}
+
+.reactlogo {
+  width: 60px;
+}
+
+.Project1-homepage-text {
+  color: #5FD2F5;
+  font-size: 40px;
+  padding: 0 0 0 20px;
+}
