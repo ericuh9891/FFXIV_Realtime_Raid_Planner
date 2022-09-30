@@ -5,7 +5,7 @@ import './Project1.css'
 
 function Project1() {
   return (
-    <div className='Project1-container'>
+    <div className='Project1 component-container'>
       <Navbar />
       <Main />
     </div>
@@ -14,23 +14,36 @@ function Project1() {
 
 function Navbar() {
   return (
-    <nav className='Project1-nav'>
-      <div className='Project1-homepage-container'>
-        <div className='Project1-homepage-icon-container'>
-          <a href='http://localhost:3000/'>
-            <img className='reactlogo' src={reactLogo}></img>
-          </a>
-          <h1 className='Project1-homepage-text'>ReactFacts</h1>
-        </div>
-      </div>
-      <h1 style={{color:'white', padding: '0 20px 0 0'}}>React Course - Project1</h1>
+    <nav className='Project1'>
+        <a href='http://localhost:3000/' className='Project1 homepage-logo-link'>
+          <img id='reactLogo' className='Project1' src={reactLogo}></img>
+          <h1 id='homepage-logo-text' className='Project1'>ReactFacts</h1>
+        </a>
+      <h1>React Course - Project1</h1>
     </nav>
   );
 };
 
 function Main() {
+  const reactFacts = [
+    "Was first released in 2013",
+    "Was originally created by Jordan Walke",
+    "Has well over 100k stars on Github",
+    "Is maintained by Facebook",
+    "Powers thousands of enterprise apps, including mobile apps",
+  ];
+  
+  function populateList(list) {
+    let index = 0;
+    let elementsList = list.map( (str) => <li key={index++}>{str}</li>);
+    return (elementsList);
+  };
+
   return (
-    <h1 className='Project1-main'>Main goes here</h1>
+    <div className='Project1 main-container'>
+      <h1>Fun facts about React</h1>
+      <ul>{populateList(reactFacts)}</ul>
+    </div>
   );
 };
 
