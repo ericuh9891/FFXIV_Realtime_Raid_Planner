@@ -1,3 +1,7 @@
+.DigitalBusinessCard {
+  font-family: 'Inter', 'Times New Roman';
+}
+
 .digitalBusinessCard-container {
   display: flex;
   justify-content: center;
@@ -7,6 +11,8 @@
 .card {
   display: flex;
   flex-direction: column;
+  width: 250px;
+  background-color: #181A1E;
 }
 
 .DigitalBusinessCard > img {
@@ -18,20 +24,43 @@
   justify-content: space-between;
 }
 
+/* Info component */
+.Info > h1, h2, h3 {
+  margin: 0;
+}
+
+.info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* button component */
 a.InfoButton {
   display: flex;
   align-items: center;
   text-decoration: none;
-  width: 75px;
-  justify-content: normal;
-  /* overflow: hidden; */
+  justify-content: space-between;
+  border-radius: 8px;
 }
 
 .InfoButton > img{
-  width: 25%;
+  width: 40px;
+  padding: 0 6px 0 6px;
 }
 
-.InfoButton > h1 {
+.InfoButton > p {
   font-size: 16px;
-  padding: 4px;
+  padding: 0 6px 0 0;
+}
+
+/* description component */
+.Description > p, h1 {
+  margin: 0;
+  color: white;
+}
+
+.Description > p {
+  font-size: 14px;
 }
