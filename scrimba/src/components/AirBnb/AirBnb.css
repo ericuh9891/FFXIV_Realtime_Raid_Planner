@@ -1,0 +1,20 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Nav bar */
+.Nav {
+  height: 50px;
+  border-bottom-style: solid;
+  border-bottom-color: #EDEDED;
+}
+.Nav > a {
+  height: 100%;
+  padding: 8px;
+}
+.Nav > a > img {
+  height: 100%;
+  padding: 14px 10px 10px 10px;
+}

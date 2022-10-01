@@ -3,12 +3,13 @@ import logo from './logo.svg';
 // import CustomPage from './components/CustomPage/CustomPage.js';
 // import CustomComponent2 from './components/CustomComponent2/CustomComponent2.js'
 // import Project1 from './components/Project1/Project1.js'
-import DigitalBusinessCard from './components/DigitalBusinessCard/DigitalBusinessCard.js'
+// import DigitalBusinessCard from './components/DigitalBusinessCard/DigitalBusinessCard.js'
+import AirBnb from './components/AirBnb/AirBnb.js'
 
 function App() {
 	return (
 		<div className="App">
-			<DigitalBusinessCard />
+			<AirBnb />
 		</div>
 	);
 }
