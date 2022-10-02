@@ -6,9 +6,8 @@
 
 /* Nav bar */
 .Nav {
-  height: 50px;
-  border-bottom-style: solid;
-  border-bottom-color: #EDEDED;
+  height: 70px;
+  box-shadow: 0px 2.98256px 7.4564px rgba(0, 0, 0, 0.1);
 }
 .Nav > a {
   height: 100%;
@@ -17,4 +16,100 @@
 .Nav > a > img {
   height: 100%;
   padding: 14px 10px 10px 10px;
+}
+
+.hero-container {
+  /* background-color: aqua; */
+  max-width: 800px;
+}
+.images-container {
+  display: flex;
+  justify-content: center;
+  /* background-color: cadetblue; */
+  padding-bottom: 40px;
+}
+.vertical-images-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* background-color: coral; */
+}
+.standin-image {
+  width: 60px;
+  height: 100px;
+  margin: 10px;
+  border-radius: 10px;
+}
+#image1, #image4, #image7{
+  background-color: #ececec;
+}
+#image2, #image5, #image8 {
+  background-color: #9fd3c7;
+}
+#image3, #image6, #image9 {
+  background-color: #385170;
+}
+
+/* image offsets to stagger the vertical image columns */
+#image2 {
+  margin-top: 25px;
+}
+#image4 {
+  margin-top: 85px;
+}
+#image6 {
+  margin-top: 10px;
+}
+#image8 {
+  margin-top: 65px;
+}
+
+.Hero > h1, p{
+  font-family: Poppins;
+}
+
+/* Card CSS */
+.AirBnb > * {
+  font-family: Poppins;
+}
+
+.AirBnb.Card {
+  width: 240px;
+}
+.Card.image-container > img{
+  width: 100%;
+}
+.Card > span.status {
+  color: black;
+  background-color: white;
+  position: relative;
+  top: 15px;
+  left: 15px;
+  font-family: Poppins;
+  display: inline-block;
+  padding-right: 4px;
+  padding-left: 4px;
+  font-size: 14px;
+}
+.rating-container {
+  display: flex;
+  height: 26px;
+  color: #BCBCBF;
+}
+.rating-container > img {
+  /* width: 20px; */
+}
+.description {
+  font-size: 14px;
+  color: #747474;
+}
+.price-container {
+  display: flex;
+}
+.start-price {
+  font-weight: 600;
+}
+.units {
+  color: #747474;
+  font-size: 14px;
 }
