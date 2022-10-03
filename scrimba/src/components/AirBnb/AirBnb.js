@@ -1,21 +1,38 @@
 import React from 'react';
 
 import './AirBnb.css';
+import data from './data.js'
 import airbnbLogo from './airbnblogo.png'
-import catImage from './cat.png'
 import redStar from './redstar.png'
+import catImage from './cat1.png'
 
 class AirBnb extends React.Component {
   constructor(props) {
     super(props);
-  }
+  };
+
 
   render() {
+    //create the card components from data
+    const cards = createCards();
+    function createCards(){
+      const cards = data.map(item => {
+        return (
+          <Card 
+            key={item.id}
+            item={item}
+          />
+        );
+      })
+      return cards
+    };
     return (
       <div className='AirBnb'>
         <Nav />
         <Hero />
-        <Card />
+        <div className='AirBnb cards-container'>
+          {cards}
+        </div>
       </div>
     );
   }
@@ -61,19 +78,28 @@ function Hero() {
   )
 }
 
-function Card() {
-  const rating = '5.0 (6)*USA'
+function Card(props) {
+  let {coverImg: coverImg, rating: rating, 
+    location: location, title: title, 
+    price: price, openSpots: openSpots} = props.item;
+  let badgeText = false;
+  if(openSpots === 0) {
+    badgeText = "SOLD OUT";
+  } else if(location.toUpperCase() === "ONLINE") {
+    badgeText = "ONLINE";
+  }
   return (
     <div className='AirBnb Card'>
       <div className='Air Bnb Card image-container'>
-        <span className='status'>SOLD OUT</span>
-        <img src={catImage} alt="Orange cat"></img>
+        {badgeText && <span className='status'>{badgeText}</span>}
+        {/* <img src={`./${coverImg}`} alt="Cat"></img> */}
+        <img src={require(`./${coverImg}`)} alt="Cat"></img>
       </div>
       <p>
-        <span className='rating-container'><img src={redStar}></img>{rating}</span>
+        <span className='rating-container'><img src={redStar}></img>{rating}•{location}</span>
       </p>
-      <p className='description'>Life Lessons with Katie Zaferes</p>
-      <span className='price-container'><p className='start-price'>From $138</p><p className='units'>/ person</p></span>
+      <p className='description'>{title}</p>
+      <span className='price-container'><p className='start-price'>From ${price}</p><p className='units'>/ person</p></span>
     </div>
   );
 };

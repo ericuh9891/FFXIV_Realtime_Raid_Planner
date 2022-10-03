@@ -113,3 +113,9 @@
   color: #747474;
   font-size: 14px;
 }
+
+.AirBnb.cards-container {
+  display:flex;
+  flex-direction: row;
+  justify-content: left;
+}
