@@ -1,10 +1,10 @@
 import logo from './logo.svg';
-import AirBnb from './components/AirBnb/AirBnb.js'
+import MemeGenerator from './components/MemeGenerator/MemeGenerator.js';
 
 function App() {
 	return (
 		<div className="App">
-			<AirBnb/>
+			<MemeGenerator />
 		</div>
 	);
 }
