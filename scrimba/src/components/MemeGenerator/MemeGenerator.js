@@ -1,18 +1,16 @@
 import React from 'react';
 import './MemeGenerator.css';
-import memesData from './memeData.js';
+// import memesData from './memeData.js';
 
-class MemeGenerator extends React.Component {
-  render() {
-    return (
-      <div className='MemeGenerator app-container'>
-        <div className='MemeGenerator app'>
-          <Header />
-          <Meme />
-        </div>
+function MemeGenerator() {
+  return (
+    <div className='MemeGenerator app-container'>
+      <div className='MemeGenerator app'>
+        <Header />
+        <Meme />
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 function Header() {
@@ -28,18 +26,25 @@ function Header() {
 };
 
 function Meme() {
-  const [allMemeImages, setAllMemeImages] = React.useState(memesData);
+  const [allMeme, setAllMeme] = React.useState({});
   const [meme, setMeme] = React.useState(
     {
-      topText: "",
-      bottomText: "",
-      randomImage: getRandomMemeImage(),
+      topText: "Top Text",
+      bottomText: "Bottom Text",
+      randomImage: "http://i.imgflip.com/1bij.jpg",
     }
   );
+  console.log("Component loaded")
+
+  React.useEffect(() => {
+    fetch('https://api.imgflip.com/get_memes')
+    .then((res) => res.json())
+    .then((data) => setAllMeme(data))
+    console.log("Use Effect called")}, [])
+  
 
   function getRandomMemeImage() {
-    let url = allMemeImages.data.memes[Math.floor(Math.random() * allMemeImages.data.memes.length)].url;
-    return url;
+    return allMeme.data.memes[Math.floor(Math.random() * allMeme.data.memes.length)].url;
   }
 
   function handleOnClick() {
@@ -49,24 +54,62 @@ function Meme() {
     }));
   };
 
+  function handleChange(event) {
+    const {name, value} = event.target;
+    setMeme( (prevMeme) => {
+      return {
+        ...prevMeme,
+        [name]: value,
+      }
+    })
+  }
+
   return (
     <main className='MemeGenerator Meme main'>
       <div className='MemeGenerator Meme form'>
         <div className='MemeGenerator Meme input-container'>
-          <input id='top-caption-input' className='MemeGenerator Meme input' 
-            type='text' placeholder='Top text'></input>
-          <input id='bottom-caption-input' className='MemeGenerator Meme input'
-            type='text' placeholder='Bottom text'></input>
+          <input
+            id='top-caption-input' 
+            className='MemeGenerator Meme input' 
+            type='text'
+            placeholder='Top text'
+            name="topText"
+            value={meme.topText}
+            onChange={handleChange}
+          />
+          <input
+            id='bottom-caption-input' 
+            className='MemeGenerator Meme input'
+            type='text' 
+            placeholder='Bottom text'
+            name="bottomText"
+            value={meme.bottomText}
+            onChange={handleChange}
+          />
         </div>
         <button className='MemeGenerator Meme button'type='button' 
           onClick={handleOnClick}>
           Get a new meme image
           <img className='MemeGenerator Meme button-img'
-            src={require('./photoIcon.png')}></img>
+            alt="Mini"
+            src={require('./photoIcon.png')}>
+          </img>
         </button>
       </div>
-      <img className='MemeGenerator Meme meme-image'
-        src={meme.randomImage}></img>
+      <div className='MemeGenerator Meme meme-image-container'>
+        <img className='MemeGenerator Meme meme-image'
+          alt="Meme"
+          src={meme.randomImage}>
+        </img>
+        <p className='MemeGenerator Meme meme-top-text'
+          name='topText'>
+          {meme.topText}
+        </p>
+        <p className='MemeGenerator Meme meme-bottom-text'
+          name='bottomText'>
+          {meme.bottomText}
+        </p>
+      </div>
     </main>
   );
 };
