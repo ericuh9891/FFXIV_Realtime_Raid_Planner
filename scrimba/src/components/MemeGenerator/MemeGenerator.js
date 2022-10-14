@@ -34,13 +34,12 @@ function Meme() {
       randomImage: "http://i.imgflip.com/1bij.jpg",
     }
   );
-  console.log("Component loaded")
 
   React.useEffect(() => {
     fetch('https://api.imgflip.com/get_memes')
     .then((res) => res.json())
-    .then((data) => setAllMeme(data))
-    console.log("Use Effect called")}, [])
+    .then((data) => setAllMeme(data));
+  }, [])
   
 
   function getRandomMemeImage() {
