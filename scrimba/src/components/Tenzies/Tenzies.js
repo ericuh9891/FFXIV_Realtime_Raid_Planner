@@ -54,6 +54,7 @@ function Tenzies() {
     });
     return won;
   };
+  
   /*** onClick Handlers ***/
   function rerollDices() {
     setDices( prevDices => prevDices.map( dice => {

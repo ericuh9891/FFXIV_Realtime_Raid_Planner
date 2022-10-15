@@ -1,10 +1,11 @@
 import logo from './logo.svg';
-import Tenzies from './components/Tenzies/Tenzies.js'
+import Sidebar from './components/FFIcons/Sidebar.js';
+
 
 function App() {
 	return (
 		<div className="App">
-			<Tenzies></Tenzies>
+			<Sidebar/>
 		</div>
 	);
 }

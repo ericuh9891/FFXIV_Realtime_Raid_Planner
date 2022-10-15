@@ -1,14 +1,14 @@
 .tenzies-container {
   width: 100vw;
   height: 100vh;
-  background-color: aquamarine;
+  /* background-color: aquamarine; */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .game-board {
-  background-color: pink;
+  background-color: lightgrey;
   width: 80%px;
   height: 80%px;
   display: flex;
