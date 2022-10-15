@@ -1,9 +1,10 @@
 import logo from './logo.svg';
-import MemeGenerator from './components/MemeGenerator/MemeGenerator.js';
+import Tenzies from './components/Tenzies/Tenzies.js'
 
 function App() {
 	return (
 		<div className="App">
+			<Tenzies></Tenzies>
 		</div>
 	);
 }
