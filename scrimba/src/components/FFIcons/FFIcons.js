@@ -1,27 +1,35 @@
 import React from 'react';
 import Draggable from 'react-draggable';
-import './FFIcons.css'
+import './FFIcons.css';
+import io from "socket.io-client";
 
-// function FFIcons(props) {
-//   const [position, setPosition] = React.useState({ x: 0, y: 0});
+const socket = io.connect("http://localhost:3001/");
+console.log(`Created socket: ${socket}`);
 
-//   function trackPos(data) {
-//     setPosition({ x: data.x, y: data.y});
-//   };
+export function FFIconsDraggable(props) {
+  const [position, setPosition] = React.useState({ x: 0, y: 0});
 
-//   return (
-//     <Draggable
-//       onDrag={(event, data) => trackPos(data)}
-//     >
-//       <div className='FFIcons'
-//       >
-//         x {position.x.toFixed(0)}, y: {position.y.toFixed(0)}
-//       </div>
-//     </Draggable>
-//   );
-// };
+  function trackPos(data) {
+    setPosition({ x: data.x, y: data.y});
+  };
 
-function FFIcons(props) {
+  React.useEffect( () => {
+    socket.emit('iconMoved', position);
+  }, [position]);
+
+  return (
+    <Draggable
+      onDrag={(event, data) => trackPos(data)}
+    >
+      <div className='FFIcons'
+      >
+        x {position.x.toFixed(0)}, y: {position.y.toFixed(0)}
+      </div>
+    </Draggable>
+  );
+};
+
+export function FFIconsPrototype(props) {
 
   const [pos1, setPos1] = React.useState(0);
   const [pos2, setPos2] = React.useState(0);
@@ -85,5 +93,3 @@ function FFIcons(props) {
     </div>
   );
 };
-
-export default FFIcons;

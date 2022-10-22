@@ -1,5 +1,5 @@
-import React from 'react';
-import FFIcons from './FFIcons.js'
+import React, { Fragment } from 'react';
+import {FFIconsPrototype, FFIconsDraggable} from './FFIcons.js'
 import './Sidebar.css'
 
 function Sidebar() {
@@ -9,11 +9,18 @@ function Sidebar() {
     for(let index = 0; index < elements.length; ++index) {
       elements[index] = 
       (
-        <FFIcons
-          key={index}
-          id={`icon${index}`}
-          value={`Icon${index}`}
-        ></FFIcons>
+        <Fragment>
+          <FFIconsPrototype
+            key={index}
+            id={`icon${index}`}
+            value={`Icon${index}`}
+          ></FFIconsPrototype>
+          <FFIconsDraggable
+            key={index}
+            id={`icon${index}`}
+            value={`Icon${index}`}
+          ></FFIconsDraggable>
+        </Fragment>
       );
     };
     return elements;
