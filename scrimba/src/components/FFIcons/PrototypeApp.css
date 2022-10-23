@@ -1,0 +1,6 @@
+.PrototypeApp {
+  background-color: lightgrey;
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+}

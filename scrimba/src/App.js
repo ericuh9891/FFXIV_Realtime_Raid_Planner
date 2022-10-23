@@ -1,11 +1,10 @@
 import logo from './logo.svg';
-import Sidebar from './components/FFIcons/Sidebar.js';
-
+import PrototypeApp from './components/FFIcons/PrototypeApp.js'
 
 function App() {
 	return (
 		<div className="App">
-			<Sidebar/>
+			<PrototypeApp></PrototypeApp>
 		</div>
 	);
 }

@@ -1,10 +1,10 @@
 import React from 'react';
 import Draggable from 'react-draggable';
 import './FFIcons.css';
-import io from "socket.io-client";
+// import io from "socket.io-client";
 
-const socket = io.connect("http://localhost:3001/");
-console.log(`Created socket: ${socket}`);
+// const socket = io.connect("http://localhost:3001/");
+// console.log(`Created socket: ${socket}`);
 
 export function FFIconsDraggable(props) {
   const [position, setPosition] = React.useState({ x: 0, y: 0});
@@ -14,7 +14,8 @@ export function FFIconsDraggable(props) {
   };
 
   React.useEffect( () => {
-    socket.emit('iconMoved', position);
+    // socket.emit('iconMoved', position);
+    console.log(`${props.id} moved`);
   }, [position]);
 
   return (
@@ -23,7 +24,7 @@ export function FFIconsDraggable(props) {
     >
       <div className='FFIcons'
       >
-        x {position.x.toFixed(0)}, y: {position.y.toFixed(0)}
+        {props.id} x: {position.x.toFixed(0)}, y: {position.y.toFixed(0)}
       </div>
     </Draggable>
   );
