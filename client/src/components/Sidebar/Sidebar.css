@@ -1,8 +1,9 @@
 .Sidebar {
-  width: 360px;
+  width: 560px;
   height: 720px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: center;
   background-color: coral;
 }
