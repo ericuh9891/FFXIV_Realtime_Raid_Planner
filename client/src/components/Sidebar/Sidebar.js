@@ -6,7 +6,7 @@ import Preview from '../Preview/Preview.js'
 function Sidebar(props) {
   return (
     <div className='Sidebar'>
-      <IconList></IconList>
+      <IconList iconList={props.iconList}></IconList>
       <Preview></Preview>
     </div>
   );
