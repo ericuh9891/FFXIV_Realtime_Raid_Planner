@@ -1,1 +1,6 @@
-
+.App {
+  width: 1080px;
+  height: 720px;
+  background-color: bisque;
+  display: flex;
+}
