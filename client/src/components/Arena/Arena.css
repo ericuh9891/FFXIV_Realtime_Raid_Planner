@@ -2,4 +2,11 @@
   width: 720px;
   height: 720px;
   background-color: aquamarine;
+  position: relative;
+}
+
+.Arena-Icon {
+  width: 60px;
+  height: 60px;
+  position: absolute;
 }
