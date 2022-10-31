@@ -1,6 +1,6 @@
 import React from 'react';
 import './Arena.css';
-import Preview from '../Preview/Preview.js';
+import Preview from '../CustomizeIcon/CustomizeIcon.js';
 import Draggable from 'react-draggable';
 
 

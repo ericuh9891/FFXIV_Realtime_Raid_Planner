@@ -1,5 +1,5 @@
 import React from 'react';
-import './Preview.css';
+import './CustomizeIcon.css';
 
 function Preview(props) {
   return (
