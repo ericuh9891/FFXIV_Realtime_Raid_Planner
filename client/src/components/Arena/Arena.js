@@ -1,5 +1,6 @@
 import React from 'react';
 import './Arena.css';
+import Preview from '../Preview/Preview.js';
 import Draggable from 'react-draggable';
 
 
@@ -56,7 +57,9 @@ function Arena (props) {
       onDragOver={onDragOverHandler} 
       onDrop={onDropHandler}
     >
+      Arena
       {icons}
+      <Preview></Preview>
     </div>
   );
 };

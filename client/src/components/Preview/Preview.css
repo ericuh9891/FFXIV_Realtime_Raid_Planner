@@ -1,5 +1,8 @@
 .Preview {
+  position: absolute;
+  left: -520px;
+  top: 360px;
   width: 360px;
   height: 360px;
-  background-color: bisque;
+  background-color: chartreuse;
 }

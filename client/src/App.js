@@ -1,5 +1,5 @@
 import './App.css';
-import Sidebar from './components/Sidebar/Sidebar.js';
+import IconList from './components/IconList/IconList.js';
 import Arena from './components/Arena/Arena.js';
 
 const iconList = [
@@ -19,7 +19,7 @@ const iconList = [
 function App() {
   return (
     <div className="App">
-      <Sidebar iconList={iconList}></Sidebar>
+      <IconList iconList={iconList}></IconList>
       <Arena iconList={iconList}></Arena>
     </div>
   );
