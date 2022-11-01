@@ -1,6 +1,7 @@
 .IconList {
   display: flex;
   flex-wrap: wrap;
+  width: 360px;
 }
 
 .IconList-selection {
