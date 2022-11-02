@@ -16,12 +16,13 @@ function Arena (props) {
    *   id: number,
    *   posX: number,
    *   poxY: number,
+   *   label: string,
    *   name: string,
    *   imgSrc: variable containing loaded in img src,
    * }
    */
   const [icons, setIcons] = React.useState([]);
-  const [selectedIcon, setSelectedIcon] = React.useState(0);
+  const [selectedIcon, setSelectedIcon] = React.useState(null);
   const arenaRef = React.useRef();
 
   // needed to override browser default behaviours
@@ -30,80 +31,98 @@ function Arena (props) {
     event.dataTransfer.dropEffect = 'move';
   };
   
-  // onMouseDown on an icon, should update the selectedIcon so CustomizeIcon is also rerendered
+  // onMouseDown on an icon, set to SelectedIcon so it can be passed to CustomizeIcon props
   function onMouseDownHandler(event) {
-    setSelectedIcon( () => Number(event.target.id))
-  }
+    setSelectedIcon( () => {
+      for(let i = 0; i < icons.length; i++) {
+        if (icons[i].id === Number(event.target.id)) {
+          return icons[i];
+        };
+      };
+    });
+  };
 
-  // spawns an icon when user drops an icon from the IconList component and releases in the Arena component area
   function onDropHandler(event) {
     event.preventDefault();
-    // gets the name of the icon
+    // get the name of the icon that's stored in the drop event's dataTransfer interface
     const name = event.dataTransfer.getData('text/plain');
-    // if it's empty then exit function, should probably console.log indicating it found nothing
-    if (name == null){
-      console.log("No name data in drop event");
-      return;
-    }
-    else {
-      // find the image associated with the name data from iconList
+    // check if an icon name exists
+    if (!name) { // if empty string is returned
+      console.log("No icon name in drop event's dataTransfer getData()");
+    } else { // if an icon name was retrieved
+      // get the image from props based on the retrieved name
       let image = null;
       for(let i = 0; i < props.iconsList.length; i++){
         if (props.iconsList[i].name === name){
           image = props.iconsList[i].image;
-        }
-      }
-      // create the icon and adds it to the Arena icon
-      const elementId = getUniqueId();
-      const imgElement = (
-      <img 
-        className='Arena-Icon' 
-        src={image}
-        alt={name}
-        elementId={elementId}
-        id={elementId}
-        draggable='false'
-        style={{
-          top: `${event.clientY-30}px`, 
-          left: `${event.clientX - arenaRef.current.getBoundingClientRect().x -30}px`
-        }}
-      >
-      </img>
-      );
+        };
+      };
+      // create the icon state and add it
+      const icon = {
+        id: getUniqueId(), // generates a unique ID that's going to be used to access and identify the icons
+        posX: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
+        posY: event.clientY - 30, // x, y coords should be where the user released their mouse inside Arena area
+        label: "", // will be used later if a user customize the icon with a custom label
+        name: name, // name of the icon
+        imgSrc: image,
+      };
+      // add the icon which triggers a rerender
       setIcons( (prevIcons) => {
-        const element = (
-          <Draggable
-            id={'draggable'+elementId}
-            onDrag={onDragHandler}
-            defaultPosition={{x: 0, y: 0}}
-            bounds='parent'
-            onMouseDown={onMouseDownHandler}
-            key={elementId}
-          >
-            {imgElement}
-          </Draggable>
-        );
-
-        const icon = {
-          elementId: elementId,
-          JSXElement: element,
-          imgElement: imgElement,
-        }
-        setSelectedIcon( () => elementId);
-        console.log(icon.JSXElement);
         return [...prevIcons, icon];
       });
-    }
+    };
   };
 
+  // renders the Arena icons based on the icon states
   function renderIcons() {
-    return icons.map( (icon) => icon.JSXElement);
+    return icons.map( (icon) => {
+      return (
+        <Draggable
+          id={'draggable'+icon.id}
+          key={'draggable'+icon.id}
+          defaultPosition={{x: 0, y: 0}}
+          bounds='parent'
+          onDrag={onDragHandler}
+          onMouseDown={onMouseDownHandler}
+        >
+          <div
+            className='Arena-Icon'
+            draggalbe='false'
+            style={{
+              top: `${icon.posY}px`, 
+              left: `${icon.posX}px`,
+            }}
+            >
+            <img 
+              id={icon.id}
+              className='Arena-Icon-Img'
+              src={icon.imgSrc}
+              alt={icon.name}
+              draggable='false'
+            >
+            </img>
+          </div>
+        </Draggable>
+      );
+    });
   }
   
   // leave for now incase it's useful for socket.io emits
   function onDragHandler(event, data) {
-    
+
   };
+  /**
+  * leave for now, should update the position of draggable 
+  * icons so if a rerender of Arena icons happens,
+  * the icon states are updated with the last known position and 
+  * everything icons will rerender in the last known spots
+  * possible position update should be something like 
+  * y = icon.top + draggable.data.y
+  * x = icon.left + draggable.data.x 
+  */
+  function onDropHandler(event, data) {
+
+  }
   
   return (
     <div 
@@ -116,7 +135,6 @@ function Arena (props) {
       {renderIcons()}
       <CustomizeIcon 
         selectedIcon={selectedIcon}
-        icons={icons}
       ></CustomizeIcon>
     </div>
   );
