@@ -10,6 +10,16 @@ function getUniqueId() {
 }
 
 function Arena (props) {
+  /** 
+   * Icon state representation should be an object of: 
+   * {
+   *   id: number,
+   *   posX: number,
+   *   poxY: number,
+   *   name: string,
+   *   imgSrc: variable containing loaded in img src,
+   * }
+   */
   const [icons, setIcons] = React.useState([]);
   const [selectedIcon, setSelectedIcon] = React.useState(0);
   const arenaRef = React.useRef();
@@ -22,8 +32,6 @@ function Arena (props) {
   
   // onMouseDown on an icon, should update the selectedIcon so CustomizeIcon is also rerendered
   function onMouseDownHandler(event) {
-    console.log(event);
-    console.log(event.target.id);
     setSelectedIcon( () => Number(event.target.id))
   }
 
@@ -47,36 +55,42 @@ function Arena (props) {
       }
       // create the icon and adds it to the Arena icon
       const elementId = getUniqueId();
+      const imgElement = (
+      <img 
+        className='Arena-Icon' 
+        src={image}
+        alt={name}
+        elementId={elementId}
+        id={elementId}
+        draggable='false'
+        style={{
+          top: `${event.clientY-30}px`, 
+          left: `${event.clientX - arenaRef.current.getBoundingClientRect().x -30}px`
+        }}
+      >
+      </img>
+      );
       setIcons( (prevIcons) => {
         const element = (
           <Draggable
+            id={'draggable'+elementId}
             onDrag={onDragHandler}
             defaultPosition={{x: 0, y: 0}}
             bounds='parent'
             onMouseDown={onMouseDownHandler}
             key={elementId}
-            >
-            <img 
-              className='Arena-Icon' 
-              src={image}
-              alt={name}
-              elementId={elementId}
-              id={elementId}
-              draggable='false' 
-              style={{
-                top: `${event.clientY-30}px`,
-                left: `${event.clientX - arenaRef.current.getBoundingClientRect().x -30}px`
-              }}
-              >
-            </img>
+          >
+            {imgElement}
           </Draggable>
         );
+
         const icon = {
           elementId: elementId,
           JSXElement: element,
+          imgElement: imgElement,
         }
-
         setSelectedIcon( () => elementId);
+        console.log(icon.JSXElement);
         return [...prevIcons, icon];
       });
     }
@@ -88,7 +102,7 @@ function Arena (props) {
   
   // leave for now incase it's useful for socket.io emits
   function onDragHandler(event, data) {
-    // console.log(data);
+    
   };
   
   return (
