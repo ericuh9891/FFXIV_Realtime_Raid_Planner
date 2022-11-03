@@ -69,6 +69,8 @@ function Arena (props) {
       setIcons( (prevIcons) => {
         return [...prevIcons, icon];
       });
+      // update the CustomizeIcon selectedIcon to the recently added icon
+      setSelectedIcon(icon);
     };
   };
 
