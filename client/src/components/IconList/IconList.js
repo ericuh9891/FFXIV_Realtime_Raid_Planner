@@ -7,26 +7,30 @@ function IconList(props) {
     event.dataTransfer.setData('text/plain', event.target.id);
   };
 
-  function renderIconList() {
+  function renderIconsList() {
     return props.iconsList.map( (iconObj, index) => {
       return (
         <div 
           className='IconList-selection'
           key={index}
-          draggable='true' onDragStart={onDragStartHandler}>
+          draggable='true' 
+          onDragStart={onDragStartHandler}
+        >
           <img 
             className='IconList-image' 
             src={iconObj.image}
             alt={iconObj.name} 
-            id={iconObj.name}></img>
+            id={iconObj.name}
+          >
+          </img>
         </div>
-      )
+      );
     });
   };
 
   return (
     <div className='IconList'>
-      {renderIconList()}
+      {renderIconsList()}
     </div>
   );
 }

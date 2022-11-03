@@ -24,7 +24,6 @@ function Arena (props) {
   const [icons, setIcons] = React.useState([]);
   const [selectedIcon, setSelectedIcon] = React.useState(null);
   const arenaRef = React.useRef();
-
   // needed to override browser default behaviours
   function onDragOverHandler(event) {
     event.preventDefault();
@@ -42,7 +41,7 @@ function Arena (props) {
     });
   };
 
-  function onDropHandler(event) {
+  function onDragDropHandler(event) {
     event.preventDefault();
     // get the name of the icon that's stored in the drop event's dataTransfer interface
     const name = event.dataTransfer.getData('text/plain');
@@ -82,8 +81,9 @@ function Arena (props) {
           key={'draggable'+icon.id}
           defaultPosition={{x: 0, y: 0}}
           bounds='parent'
-          onDrag={onDragHandler}
+          onDrag={onMouseDragHandler}
           onMouseDown={onMouseDownHandler}
+          onStop={onMouseDropHandler}
         >
           <div
             className='Arena-Icon'
@@ -108,8 +108,8 @@ function Arena (props) {
   }
   
   // leave for now incase it's useful for socket.io emits
-  function onDragHandler(event, data) {
-
+  function onMouseDragHandler(event, data) {
+    // console.log(event);
   };
   /**
   * leave for now, should update the position of draggable 
@@ -120,16 +120,18 @@ function Arena (props) {
   * y = icon.top + draggable.data.y
   * x = icon.left + draggable.data.x 
   */
-  function onDropHandler(event, data) {
-
+  function onMouseDropHandler(event, data) {
+    console.log(event);
+    console.log(data);
+    setIcons( (prevIcons) => prevIcons.map( (icon) => icon));
   }
   
   return (
     <div 
     className='Arena' 
     ref={arenaRef} 
-    onDragOver={onDragOverHandler} 
-    onDrop={onDropHandler}
+    onDragOver={onDragOverHandler}
+    onDrop={onDragDropHandler} // browser drag and drop API
     >
       Arena
       {renderIcons()}
