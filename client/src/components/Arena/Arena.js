@@ -3,11 +3,17 @@ import './Arena.css';
 import CustomizeIcon from '../CustomizeIcon/CustomizeIcon.js';
 import Draggable from 'react-draggable';
 
+// may need to move this to App component in the future if socket is needed in higher level components
+import io from 'socket.io-client'; 
+
 let id = 0;
 
 function getUniqueId() {
   return id++;
 }
+
+const socket = io.connect("http://localhost:8000");
+socket.emit('arena',"Arena component connected");
 
 function Arena (props) {
   /** 
@@ -125,7 +131,7 @@ function Arena (props) {
   
   // leave for now incase it's useful for socket.io emits
   function onMouseDragHandler(event, data) {
-    // console.log(event);
+    
   };
   /**
   * leave for now, should update the position of draggable 
