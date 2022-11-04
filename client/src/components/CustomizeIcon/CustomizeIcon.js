@@ -8,11 +8,27 @@ import './CustomizeIcon.css';
  */
 
 function CustomizeIcon(props) {
+  const currentIcon = props.selectedIcon;
+  const labelRef = React.useRef();
+
+  function onInputHandler(event) {
+    currentIcon.label = labelRef.current.value;
+    props.updateIcon(currentIcon);
+  }
+
   return (
     <div 
       className='CustomizeIcon'
     >
       Icon Preview and Customization
+      <input
+        type='text'
+        placeholder='Label'
+        ref={labelRef}
+        onInput={onInputHandler}
+        value={currentIcon && currentIcon.label} // checks if a label value exists
+      >
+      </input>
       {props.selectedIcon != undefined &&
         <img
           className='CustomizeIcon-Icon'

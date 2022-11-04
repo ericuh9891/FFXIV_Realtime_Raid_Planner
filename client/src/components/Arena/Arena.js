@@ -74,6 +74,15 @@ function Arena (props) {
     };
   };
 
+  // called by CustomizeIcon component to update an icon
+  function customizeIconUpdateHandler(updatedIcon) {
+    setIcons( (prevIcons) => {
+      return prevIcons.map( (icon) => {
+        return icon.id === updatedIcon.id ? updatedIcon : icon;
+      });
+    });
+  };
+
   // renders the Arena icons based on the icon states
   function renderIcons() {
     return icons.map( (icon) => {
@@ -95,6 +104,11 @@ function Arena (props) {
               left: `${icon.posX}px`,
             }}
             >
+            <label
+              className='Arena-Icon-label'
+            >
+              {icon.label}
+            </label>
             <img 
               id={icon.id}
               className='Arena-Icon-Img'
@@ -139,6 +153,7 @@ function Arena (props) {
       {renderIcons()}
       <CustomizeIcon 
         selectedIcon={selectedIcon}
+        updateIcon={customizeIconUpdateHandler}
       ></CustomizeIcon>
     </div>
   );
