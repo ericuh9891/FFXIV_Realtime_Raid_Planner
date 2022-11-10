@@ -24,8 +24,10 @@ function Arena (props) {
    * Icon state representation should be an object of: 
    * {
    *   id: number,
-   *   posX: number,
-   *   poxY: number,
+   *   startPosX: number,
+   *   startPosY: number,
+   *   draggedX: number,
+   *   draggedY: number,
    *   label: string,
    *   name: string,
    *   imgSrc: variable containing loaded in img src, // may need to change it so that it points to a iconsList instead of hardcoded img src path
@@ -74,8 +76,12 @@ function Arena (props) {
       // create the icon state and add it
       const icon = {
         id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons
+        startPosX: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
+        startPosY: event.clientY - arenaRef.current.getBoundingClientRect().y - 30, // x, y coords should be where the user released their mouse inside Arena area
+        draggedX: 0,
+        draggedY: 0,
         posX: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
-        posY: event.clientY - 30, // x, y coords should be where the user released their mouse inside Arena area
+        posY: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
         label: "", // will be used later if a user customize the icon with a custom label
         name: name, // name of the icon
         imgSrc: image,
@@ -91,11 +97,8 @@ function Arena (props) {
       setSelectedIcon(icon);
     };
   };
-
   // notify the server an icon has moved, sends the icon id and it's new posX and posY
   function onMouseDragHandler(event, data) {
-    // console.log(event);
-    // console.log(data);
     // find the icon
     let icon = null;
     for (let i = 0; i < icons.length; ++i){
@@ -104,8 +107,16 @@ function Arena (props) {
         break;
       };
     };
-    // send the icon id, new posX and new posY
-    socket.emit('iconMove', {id: data.node.id, posX: icon.posX + data.x, posY: icon.posY + data.y});
+    // console.log(document.getElementById(icon.id))
+    icon.draggedX = data.x
+    icon.draggedY = data.y
+    icon.posX = icon.draggedX + icon.startPosX
+    icon.posY = icon.draggedY + icon.startPosY
+    console.log(`x: ${icon.draggedX}, y: ${icon.draggedY}`);
+    // send the icon id, and the positionings to recalculate icon positions on rerender
+    socket.emit('iconMove', {id: data.node.id, 
+      startPosX: icon.startPosX, startPosY: icon.startPosY, 
+      draggedX: icon.draggedX, draggedY: icon.draggedY});
   };
 
   /**
@@ -123,6 +134,7 @@ function Arena (props) {
 
   // called by CustomizeIcon component to update an icon
   function customizeIconUpdateHandler(updatedIcon) {
+    socket.emit('iconEdit', updatedIcon);
     setIcons( (prevIcons) => {
       return prevIcons.map( (icon) => {
         return icon.id === updatedIcon.id ? updatedIcon : icon;
@@ -138,12 +150,14 @@ function Arena (props) {
         return [...prevIcons, icon];
       });
     });
+
     socket.on('iconMove', (movement) => {
       console.log('Moving icon');
       setIcons( (prevIcons) => {
         return prevIcons.map( (icon) => {
           if (icon.id === movement.id) {
-            return {...icon, posX: movement.posX, posY: movement.posY};
+            return {...icon, startPosX: movement.startPosX, startPosY: movement.startPosY, 
+              draggedX: movement.draggedX, draggedY: movement.draggedY};
           } else {
             return icon;
           };
@@ -151,10 +165,19 @@ function Arena (props) {
       });
     });
 
+    socket.on('iconEdit', (editedIcon) => {
+      setIcons( (prevIcons) => {
+        return prevIcons.map( (icon) => {
+          return icon.id === editedIcon.id ? editedIcon : icon;
+        });
+      });
+    })
+
     // clean up socket listeners on component dismount
     return () => {
       socket.off('iconSpawn');
       socket.off('iconMove');
+      socket.off('iconEdit');
     };
   }, []);
 
@@ -166,7 +189,8 @@ function Arena (props) {
           id={'draggable'+icon.id}
           key={'draggable'+icon.id}
           defaultPosition={{x: 0, y: 0}}
-          bounds='parent'
+          bounds={{left: -icon.startPosX, top: -icon.startPosY, right: 720-icon.startPosX, bottom: 720-icon.startPosY}}
+          position={{x:icon.posX, y:icon.posY}}
           onDrag={onMouseDragHandler}
           onMouseDown={onMouseDownHandler}
           onStop={onMouseDropHandler}
@@ -175,10 +199,10 @@ function Arena (props) {
             id={icon.id}
             className='Arena-Icon'
             draggalbe='false'
-            style={{
-              top: `${icon.posY}px`, 
-              left: `${icon.posX}px`,
-            }}
+            // style={{
+            //   top: `${icon.startPosY}px`, 
+            //   left: `${icon.startPosX}px`,
+            // }}
             // onMouseDown={onMouseDownHandler}
             >
             <label
