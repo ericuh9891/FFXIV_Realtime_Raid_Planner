@@ -4,6 +4,7 @@
   background-color: aquamarine;
   position: relative;
   text-align: center;
+  user-select: none;
 }
 
 .Arena-Icon {

@@ -19,6 +19,8 @@ function CustomizeIcon(props) {
   return (
     <div 
       className='CustomizeIcon'
+      onDragOver={null}
+      onDrop={null}
     >
       Icon Preview and Customization
       <input

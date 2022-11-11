@@ -3,6 +3,7 @@
   flex-wrap: wrap;
   width: 360px;
   height: 360px;
+  user-select: none;
 }
 
 .IconList-selection {

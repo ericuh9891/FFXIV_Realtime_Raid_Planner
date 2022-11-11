@@ -24,10 +24,8 @@ function Arena (props) {
    * Icon state representation should be an object of: 
    * {
    *   id: number,
-   *   startPosX: number,
-   *   startPosY: number,
-   *   draggedX: number,
-   *   draggedY: number,
+   *   top: number,
+   *   left: number,  
    *   label: string,
    *   name: string,
    *   imgSrc: variable containing loaded in img src, // may need to change it so that it points to a iconsList instead of hardcoded img src path
@@ -46,15 +44,51 @@ function Arena (props) {
   };
   
   // onMouseDown on an icon, set to SelectedIcon so it can be passed to CustomizeIcon props
+  // also needs to register mouse events to make an icon drag along the position of the current mouse
+  // by registering a document.onMouseMove listener to update the icon position
   function onMouseDownHandler(event) {
-    console.log(event);
-    setSelectedIcon( () => {
-      for(let i = 0; i < icons.length; i++) {
-        if (icons[i].id === event.target.id) {
-          return icons[i];
-        };
+    console.log(event.currentTarget);
+    // find the icon that was clicked
+    let icon = null;
+    for(let i = 0; i < icons.length; i++) {
+      if (icons[i].id === event.currentTarget.id) {
+        icon = icons[i];
+        console.log("icon found");
+        break;
       };
+    };
+
+    // update icon pos with setIcons
+    icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
+    icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
+    document.onmousemove = (event) => {
+      elementDrag(event, icon);
+    };
+    setIcons( (prevIcons) => {
+      return prevIcons.map( (prevIcon) => {
+        return prevIcon.id === icon.id ? icon : prevIcon;
+      });
     });
+    setSelectedIcon( () => icon);
+    console.log("End of mouse down handler");
+  };
+
+  function elementDrag(event, icon) {
+    event = event || window.event;
+    event.preventDefault();
+    // update icon pos with setIcons
+    icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
+    icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
+    setIcons( (prevIcons) => {
+      return prevIcons.map( (prevIcon) => {
+        return prevIcon.id === icon.id ? icon : prevIcon;
+      })
+    });
+  }
+
+  function onMouseUpHandler(event){
+    document.onmousemove = null;
+    console.log("End of mouse up handler");
   };
  
   // spawns an icon from the dragged icon from IconList
@@ -76,12 +110,8 @@ function Arena (props) {
       // create the icon state and add it
       const icon = {
         id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons
-        startPosX: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
-        startPosY: event.clientY - arenaRef.current.getBoundingClientRect().y - 30, // x, y coords should be where the user released their mouse inside Arena area
-        draggedX: 0,
-        draggedY: 0,
-        posX: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
-        posY: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
+        top: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
+        left: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
         label: "", // will be used later if a user customize the icon with a custom label
         name: name, // name of the icon
         imgSrc: image,
@@ -97,40 +127,33 @@ function Arena (props) {
       setSelectedIcon(icon);
     };
   };
-  // notify the server an icon has moved, sends the icon id and it's new posX and posY
-  function onMouseDragHandler(event, data) {
-    // find the icon
-    let icon = null;
-    for (let i = 0; i < icons.length; ++i){
-      if (icons[i].id === data.node.id) {
-        icon = icons[i];
-        break;
-      };
-    };
-    // console.log(document.getElementById(icon.id))
-    icon.draggedX = data.x
-    icon.draggedY = data.y
-    icon.posX = icon.draggedX + icon.startPosX
-    icon.posY = icon.draggedY + icon.startPosY
-    console.log(`x: ${icon.draggedX}, y: ${icon.draggedY}`);
-    // send the icon id, and the positionings to recalculate icon positions on rerender
-    socket.emit('iconMove', {id: data.node.id, 
-      startPosX: icon.startPosX, startPosY: icon.startPosY, 
-      draggedX: icon.draggedX, draggedY: icon.draggedY});
-  };
 
-  /**
-  * leave for now, should update the position of draggable 
-  * icons so if a rerender of Arena icons happens,
-  * the icon states are updated with the last known position and 
-  * everything icons will rerender in the last known spots
-  * possible position update should be something like 
-  * y = icon.top + draggable.data.y
-  * x = icon.left + draggable.data.x 
-  */
-  function onMouseDropHandler(event, data) {
-    setIcons( (prevIcons) => prevIcons.map( (icon) => icon));
-  }
+  // notify the server an icon has moved, sends the icon id and it's new posX and posY
+  // function onMouseDragHandler(event, data) {
+  //   // find the icon
+  //   let icon = null;
+  //   for (let i = 0; i < icons.length; ++i){
+  //     if (icons[i].id === data.node.id) {
+  //       icon = icons[i];
+  //       break;
+  //     };
+  //   };
+  //   // console.log(document.getElementById(icon.id))
+  //   icon.draggedX = data.x
+  //   icon.draggedY = data.y
+  //   icon.posX = icon.draggedX + icon.startPosX
+  //   icon.posY = icon.draggedY + icon.startPosY
+  //   console.log(`x: ${icon.draggedX}, y: ${icon.draggedY}`);
+  //   // send the icon id, and the positionings to recalculate icon positions on rerender
+  //   socket.emit('iconMove', {id: data.node.id, 
+  //     startPosX: icon.startPosX, startPosY: icon.startPosY, 
+  //     draggedX: icon.draggedX, draggedY: icon.draggedY});
+  // };
+
+  // unsure what this does
+  // function onMouseDropHandler(event, data) {
+  //   setIcons( (prevIcons) => prevIcons.map( (icon) => icon));
+  // }
 
   // called by CustomizeIcon component to update an icon
   function customizeIconUpdateHandler(updatedIcon) {
@@ -185,44 +208,34 @@ function Arena (props) {
   function renderIcons() {
     return icons.map( (icon) => {
       return (
-        <Draggable
-          id={'draggable'+icon.id}
-          key={'draggable'+icon.id}
-          defaultPosition={{x: 0, y: 0}}
-          bounds={{left: -icon.startPosX, top: -icon.startPosY, right: 720-icon.startPosX, bottom: 720-icon.startPosY}}
-          position={{x:icon.posX, y:icon.posY}}
-          onDrag={onMouseDragHandler}
+        <div
+          id={icon.id}
+          className='Arena-Icon'
+          draggalbe='false'
+          style={{
+            top: `${icon.top}px`, 
+            left: `${icon.left}px`,
+          }}
           onMouseDown={onMouseDownHandler}
-          onStop={onMouseDropHandler}
-        >
-          <div
+          onMouseUp={onMouseUpHandler}
+          >
+          <label
+            className='Arena-Icon-label'
+          >
+            {icon.label}
+          </label>
+          <img 
             id={icon.id}
-            className='Arena-Icon'
-            draggalbe='false'
-            // style={{
-            //   top: `${icon.startPosY}px`, 
-            //   left: `${icon.startPosX}px`,
-            // }}
-            // onMouseDown={onMouseDownHandler}
-            >
-            <label
-              className='Arena-Icon-label'
-            >
-              {icon.label}
-            </label>
-            <img 
-              id={icon.id}
-              className='Arena-Icon-Img'
-              src={icon.imgSrc}
-              alt={icon.name}
-              draggable='false'
-            >
-            </img>
-          </div>
-        </Draggable>
+            className='Arena-Icon-Img'
+            src={icon.imgSrc}
+            alt={icon.name}
+            draggable='false'
+          >
+          </img>
+        </div>
       );
     });
-  }
+  };
   
   return (
     <div 
