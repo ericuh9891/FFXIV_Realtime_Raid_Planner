@@ -1,7 +1,6 @@
 import React from 'react';
 import './Arena.css';
 import CustomizeIcon from '../CustomizeIcon/CustomizeIcon.js';
-import Draggable from 'react-draggable';
 
 // may need to move this to App component in the future if socket is needed in higher level components
 import io from 'socket.io-client'; 
@@ -43,8 +42,8 @@ function Arena (props) {
     event.dataTransfer.dropEffect = 'move';
   };
   
-  // onMouseDown on an icon, set to SelectedIcon so it can be passed to CustomizeIcon props
-  // also needs to register mouse events to make an icon drag along the position of the current mouse
+  // onMouseDown on an icon, sets clicked icon to SelectedIcon so it can be passed to CustomizeIcon props
+  // also registers mouse events to make an icon drag along the position of the current mouse
   // by registering a document.onMouseMove listener to update the icon position
   function onMouseDownHandler(event) {
     console.log(event.currentTarget);
@@ -53,32 +52,34 @@ function Arena (props) {
     for(let i = 0; i < icons.length; i++) {
       if (icons[i].id === event.currentTarget.id) {
         icon = icons[i];
-        console.log("icon found");
         break;
       };
     };
-
-    // update icon pos with setIcons
-    icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
-    icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
+    // get the arena's DOM CSS properties
+    const arenaRect = arenaRef.current.getBoundingClientRect();
+    // registers DOM to listen for onmousemove event and move the selected icon
+    // based on mouse movement and keeps it with the bounds of the arena
     document.onmousemove = (event) => {
-      elementDrag(event, icon);
+      elementDrag(event, icon, arenaRect);
     };
-    setIcons( (prevIcons) => {
-      return prevIcons.map( (prevIcon) => {
-        return prevIcon.id === icon.id ? icon : prevIcon;
-      });
-    });
     setSelectedIcon( () => icon);
-    console.log("End of mouse down handler");
   };
 
-  function elementDrag(event, icon) {
+  function elementDrag(event, icon, arenaRect) {
     event = event || window.event;
     event.preventDefault();
-    // update icon pos with setIcons
-    icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
-    icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
+    // updates icon position without rerender, only allows icons to move within arena bounds
+    if (arenaRect.top+30 <= event.clientY &&
+      event.clientY <= arenaRect.top+arenaRect.height-30){
+        icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
+      }
+    if (arenaRect.left+30 <= event.clientX &&
+      event.clientX <= arenaRect.left+arenaRect.width-30){
+        icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
+      }
+    // notify server of iconMove
+    socket.emit('iconMove', {id: icon.id, top: icon.top, left: icon.left})
+    // updates icons
     setIcons( (prevIcons) => {
       return prevIcons.map( (prevIcon) => {
         return prevIcon.id === icon.id ? icon : prevIcon;
@@ -86,9 +87,9 @@ function Arena (props) {
     });
   }
 
+  // when icon move movement is done on mouseup event, removes onmousemove listener
   function onMouseUpHandler(event){
     document.onmousemove = null;
-    console.log("End of mouse up handler");
   };
  
   // spawns an icon from the dragged icon from IconList
@@ -111,7 +112,7 @@ function Arena (props) {
       const icon = {
         id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons
         top: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
-        left: event.clientX - arenaRef.current.getBoundingClientRect().x - 30,
+        left: event.clientX - arenaRef.current.getBoundingClientRect().x - 30, // CSS positioning for icon
         label: "", // will be used later if a user customize the icon with a custom label
         name: name, // name of the icon
         imgSrc: image,
@@ -127,33 +128,6 @@ function Arena (props) {
       setSelectedIcon(icon);
     };
   };
-
-  // notify the server an icon has moved, sends the icon id and it's new posX and posY
-  // function onMouseDragHandler(event, data) {
-  //   // find the icon
-  //   let icon = null;
-  //   for (let i = 0; i < icons.length; ++i){
-  //     if (icons[i].id === data.node.id) {
-  //       icon = icons[i];
-  //       break;
-  //     };
-  //   };
-  //   // console.log(document.getElementById(icon.id))
-  //   icon.draggedX = data.x
-  //   icon.draggedY = data.y
-  //   icon.posX = icon.draggedX + icon.startPosX
-  //   icon.posY = icon.draggedY + icon.startPosY
-  //   console.log(`x: ${icon.draggedX}, y: ${icon.draggedY}`);
-  //   // send the icon id, and the positionings to recalculate icon positions on rerender
-  //   socket.emit('iconMove', {id: data.node.id, 
-  //     startPosX: icon.startPosX, startPosY: icon.startPosY, 
-  //     draggedX: icon.draggedX, draggedY: icon.draggedY});
-  // };
-
-  // unsure what this does
-  // function onMouseDropHandler(event, data) {
-  //   setIcons( (prevIcons) => prevIcons.map( (icon) => icon));
-  // }
 
   // called by CustomizeIcon component to update an icon
   function customizeIconUpdateHandler(updatedIcon) {
@@ -179,8 +153,7 @@ function Arena (props) {
       setIcons( (prevIcons) => {
         return prevIcons.map( (icon) => {
           if (icon.id === movement.id) {
-            return {...icon, startPosX: movement.startPosX, startPosY: movement.startPosY, 
-              draggedX: movement.draggedX, draggedY: movement.draggedY};
+            return {...icon, top: movement.top, left: movement.left};
           } else {
             return icon;
           };
@@ -241,12 +214,12 @@ function Arena (props) {
     <div 
     className='Arena' 
     ref={arenaRef} 
-    onDragOver={onDragOverHandler}
+    onDragOver={onDragOverHandler} // browser drag and drop API
     onDrop={onDragDropHandler} // browser drag and drop API
     >
       Arena
       {renderIcons()}
-      <CustomizeIcon 
+      <CustomizeIcon
         selectedIcon={selectedIcon}
         updateIcon={customizeIconUpdateHandler}
       ></CustomizeIcon>

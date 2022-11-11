@@ -3,9 +3,6 @@
 ## Client
 ### TODO:
 - Curate list of icons
-- Create prototype of project app UI
-- Setup client socket.io
-
 ### List of icons:
 - Waymarks 1-4 and A-D
 - Player role icons
@@ -15,4 +12,3 @@
 ---
 ## Server
 ### TODO:
-- Setup server socket.io

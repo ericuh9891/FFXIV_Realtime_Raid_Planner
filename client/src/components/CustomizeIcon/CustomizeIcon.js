@@ -21,6 +21,7 @@ function CustomizeIcon(props) {
       className='CustomizeIcon'
       onDragOver={null}
       onDrop={null}
+      draggable='false'
     >
       Icon Preview and Customization
       <input
