@@ -11,10 +11,11 @@ socket.emit('arena',"Arena component connected");
 
 // generates unique IDs for user
 function* uniqueIdGenerator() {
-  let limit = 1000;
+  const limit = 10000;
   for(let id = 0; id < limit; id++) {
     yield `${socket.id} ${id}`;
   };
+  console.log(`hit limit of ${limit} IDs`);
 }
 let getUniqueId = uniqueIdGenerator();
 

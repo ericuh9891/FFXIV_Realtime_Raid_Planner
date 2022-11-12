@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const http = require('http');
+const { REPL_MODE_SLOPPY } = require('repl');
 
 const server = http.createServer(app);
 
@@ -38,6 +39,33 @@ io.on('connection', (socket) => {
 
 // serve the dev build, change to production builds when ready
 app.use(express.static('../client/build'));
+
+// list of rooms, room should be added only when a socket joins/creates the room
+const roomList = new Set();
+
+// room id generator, will check roomList for a generated id colision and rerun
+function roomIdGenerator() {
+  // controls the size of hex room id by number of 0s in hex multiplier
+  const roomIdLength = 0x10000
+  // generates a hex room id 
+  let newRoomId = null
+  do {
+    newRoomId = Math.floor((1 + Math.random()) * roomIdLength)
+    .toString(16)
+    .substring(1);
+  } while (roomList.has(newRoomId));
+  return newRoomId;
+};
+
+/*** Express routing */
+
+app.get('/room/:room', (req, res) => {
+  if (roomList.includes(req.params.room)){
+    res.send(`Room: ${req.params.room}`);
+  } else {
+    res.send('No such room');
+  }
+});
 
 // send react app
 app.get('/', (req, res) => {
