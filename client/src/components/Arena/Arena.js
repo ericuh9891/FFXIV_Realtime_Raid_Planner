@@ -6,8 +6,17 @@ import CustomizeIcon from '../CustomizeIcon/CustomizeIcon.js';
 import io from 'socket.io-client'; 
 
 // setup socket connection to the server
-const socket = io.connect("http://localhost:8000");
-socket.emit('arena',"Arena component connected");
+const socket = io.connect();
+// if no pathname/roomId was given, then join a new room with socket emit
+if (window.location.pathname === '/'){ // base homepage with not pathname/roomId
+  // tell server to create a room and also to automatically join the user into that room
+  socket.emit('createRoom');
+} else {
+  // if a pathname/roomId is in the URL then user will be joined into that room
+  // only correct pathname/roomId will allow users to get the web application page
+  socket.emit('joinRoom', window.location.pathname.split('/')[1]);
+  // if a user uses a URL that has an invalid roomId then server sends an error message/webpage to user
+}
 
 // generates unique IDs for user
 function* uniqueIdGenerator() {
@@ -33,6 +42,7 @@ function Arena (props) {
    */
   const [icons, setIcons] = React.useState([]);
   const [selectedIcon, setSelectedIcon] = React.useState(null);
+  const [room, setRoom] = React.useState(''); // may be useful later if I decide to refactor to client keeping track of rooms
   const arenaRef = React.useRef();
 
 /*** Event Handlers */
@@ -47,7 +57,6 @@ function Arena (props) {
   // also registers mouse events to make an icon drag along the position of the current mouse
   // by registering a document.onMouseMove listener to update the icon position
   function onMouseDownHandler(event) {
-    console.log(event.currentTarget);
     // find the icon that was clicked
     let icon = null;
     for(let i = 0; i < icons.length; i++) {
@@ -170,11 +179,18 @@ function Arena (props) {
       });
     })
 
+    socket.on('joinedRoom', (roomId) => {
+      console.log(`Joined room: ${roomId}`);
+      setRoom( () => roomId);
+    })
     // clean up socket listeners on component dismount
     return () => {
+      // leave the room the socket is in
+      // socket.emit('leaveRoom', room);
       socket.off('iconSpawn');
       socket.off('iconMove');
       socket.off('iconEdit');
+      socket.off('joinedRoom');
     };
   }, []);
 

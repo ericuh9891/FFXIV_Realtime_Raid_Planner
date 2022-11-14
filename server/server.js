@@ -2,13 +2,27 @@
 const express = require('express');
 const app = express();
 const http = require('http');
-const { REPL_MODE_SLOPPY } = require('repl');
+const path = require('path');
 
 const server = http.createServer(app);
 
 // socket.io setup
 const { Server } = require('socket.io');
 const io = new Server(server);
+
+// finds the first room the socket belongs to, 
+// should be fine for my use case as each user should only be in one room
+function findRoomId(socket) {
+  console.log("Entering findRoomId function");
+  let room = null;
+  socket.rooms.forEach( (element) => {
+    if (element != socket.id){
+      room = element;
+    };
+  });
+  console.log(`Returning ${room}`);
+  return room;
+};
 
 // socket.io event listeners
 io.on('connection', (socket) => {
@@ -18,21 +32,35 @@ io.on('connection', (socket) => {
   // icon spawn
   socket.on('iconSpawn', (icon) => {
     console.log(`User: ${socket.id} spawned a new icon:`);
-    socket.broadcast.emit('iconSpawn', icon);
+    socket.to(findRoomId(socket)).emit('iconSpawn', icon)
   });
   // icon move
   socket.on('iconMove', (movement) => {
     console.log(`User: ${socket.id} moved an icon`);
-    socket.broadcast.emit('iconMove', movement);
-  })
+    socket.to(findRoomId(socket)).emit('iconMove', movement);
+  });
   // icon edit
   socket.on('iconEdit', (editedIcon) => {
     console.log(`User: ${socket.id} edited an icon`);
-    socket.broadcast.emit('iconEdit', editedIcon);
+    // socket.broadcast.emit('iconEdit', editedIcon);
+    socket.to(findRoomId(socket)).emit('iconEdit', editedIcon);
+  });
+
+  // need to implement a socket to listen for a createRoom message for when a user connects to the base homepage with no room
+  socket.on('createRoom', () => {
+    const newRoom = roomIdGenerator();
+    roomList.add(newRoom);
+    socket.join(newRoom);
+    socket.emit('joinedRoom', newRoom);
+  });
+  // join room
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(socket.rooms);
+    socket.emit('joinedRoom', roomId);
   })
   // tells all other connected sockets to update their icons state
   // socket.on('iconsUpdate', (message) => socket.broadcast.emit('iconsUpdate', message));
-
 
   socket.on('disconnect', () => console.log(`User disconnected: ${socket.id}`));
 });
@@ -41,6 +69,7 @@ io.on('connection', (socket) => {
 app.use(express.static('../client/build'));
 
 // list of rooms, room should be added only when a socket joins/creates the room
+// current doesn't update when a socket leaves a room and the room disappears
 const roomList = new Set();
 
 // room id generator, will check roomList for a generated id colision and rerun
@@ -59,17 +88,24 @@ function roomIdGenerator() {
 
 /*** Express routing */
 
-app.get('/room/:room', (req, res) => {
-  if (roomList.includes(req.params.room)){
-    res.send(`Room: ${req.params.room}`);
-  } else {
-    res.send('No such room');
-  }
-});
-
 // send react app
 app.get('/', (req, res) => {
   res.sendFile('/index.html');
+});
+// not sure why root option is required but now the path is set 
+// to client/build folder to get the index.html again
+app.get('/:room', (req, res) => {
+  var options = {
+    root: path.join(__dirname,'../client/build')
+  }
+  // if the room provided in URL exists, then web app is sent
+  if (roomList.has(req.params.room)){
+    res.sendFile('/index.html', options);
+  } else {
+    // invalid room given, error is sent, 
+    // TODO: create an error page to server instead
+    res.send('No such room');
+  }
 });
 
 const port = 8000
