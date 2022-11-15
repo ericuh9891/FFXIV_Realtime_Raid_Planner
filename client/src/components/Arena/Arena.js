@@ -16,7 +16,7 @@ if (window.location.pathname === '/'){ // base homepage with not pathname/roomId
   // only correct pathname/roomId will allow users to get the web application page
   socket.emit('joinRoom', window.location.pathname.split('/')[1]);
   // if a user uses a URL that has an invalid roomId then server sends an error message/webpage to user
-}
+};
 
 // generates unique IDs for user
 function* uniqueIdGenerator() {
@@ -25,27 +25,43 @@ function* uniqueIdGenerator() {
     yield `${socket.id} ${id}`;
   };
   console.log(`hit limit of ${limit} IDs`);
-}
+};
 let getUniqueId = uniqueIdGenerator();
 
 function Arena (props) {
+  /**
+   * Arena states representation should be an array of Icon states arrays
+   * [
+   *   iconState1[],
+   *   iconState2[],
+   *   iconState3[],
+   * ]
+   */
+
+  /**
+   * Each Icon States should be an array of Icon objects
+   */
+
   /** 
-   * Icon state representation should be an object of: 
+   * Icon object representation should be as follow: 
    * {
-   *   id: number,
+   *   id: number, // id is made by adding the socketID and a unique number generator
+   *   arena: number, // the arena it belongs to, the index of arenaStates
    *   top: number,
-   *   left: number,  
+   *   left: number,
    *   label: string,
    *   name: string,
    *   imgSrc: variable containing loaded in img src, // may need to change it so that it points to a iconsList instead of hardcoded img src path
    * }
    */
-  const [icons, setIcons] = React.useState([]);
+
+  const [arenaStates, setArenaStates] = React.useState([[]]);
+  const [currentArena, setCurrentArena] = React.useState(0); // may be needed later when there are multiple arenaStates
   const [selectedIcon, setSelectedIcon] = React.useState(null);
   const [room, setRoom] = React.useState(''); // may be useful later if I decide to refactor to client keeping track of rooms
   const arenaRef = React.useRef();
 
-/*** Event Handlers */
+  /*** Event Handlers */
 
   // needed to override browser default behaviours
   function onDragOverHandler(event) {
@@ -59,11 +75,13 @@ function Arena (props) {
   function onMouseDownHandler(event) {
     // find the icon that was clicked
     let icon = null;
-    for(let i = 0; i < icons.length; i++) {
-      if (icons[i].id === event.currentTarget.id) {
-        icon = icons[i];
+    for(let i = 0; i < arenaStates[currentArena].length; ++i) {
+      if (arenaStates[currentArena][i].id === event.currentTarget.id) {
+        icon = arenaStates[currentArena][i];
         break;
       };
+      // error, icon should always be found
+      console.log('Icon not found in function onMouseDownHandler');
     };
     // get the arena's DOM CSS properties
     const arenaRect = arenaRef.current.getBoundingClientRect();
@@ -72,6 +90,7 @@ function Arena (props) {
     document.onmousemove = (event) => {
       elementDrag(event, icon, arenaRect);
     };
+    // sets the current selected icon so CustomizeIcon is updated
     setSelectedIcon( () => icon);
   };
 
@@ -79,23 +98,32 @@ function Arena (props) {
     event = event || window.event;
     event.preventDefault();
     // updates icon position without rerender, only allows icons to move within arena bounds
+    // FIXME: should probably not use hardcoded values of 30 and extract the icon width/height
     if (arenaRect.top+30 <= event.clientY &&
       event.clientY <= arenaRect.top+arenaRect.height-30){
         icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
-      }
+      };
     if (arenaRect.left+30 <= event.clientX &&
       event.clientX <= arenaRect.left+arenaRect.width-30){
         icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
-      }
+      };
     // notify server of iconMove
-    socket.emit('iconMove', {id: icon.id, top: icon.top, left: icon.left})
-    // updates icons
-    setIcons( (prevIcons) => {
-      return prevIcons.map( (prevIcon) => {
-        return prevIcon.id === icon.id ? icon : prevIcon;
-      })
+    socket.emit('iconMove', {id: icon.id, arena: icon.arena, top: icon.top, left: icon.left});
+    // update the icon in arenaStates
+    setArenaStates( (prevArenaStates) => {
+      return prevArenaStates.map( (arenaState, index) => {
+        // find the arenaState
+        if (icon.arena === index) {
+          // return a new arenaState after updating it with the icon
+          return arenaState.map( (prevIcon) => {
+            return prevIcon.id === icon.id ? icon : prevIcon;
+          });
+        } else {
+          return arenaState;
+        };
+      });
     });
-  }
+  };
 
   // when icon move movement is done on mouseup event, removes onmousemove listener
   function onMouseUpHandler(event){
@@ -118,9 +146,10 @@ function Arena (props) {
           image = props.iconsList[i].image;
         };
       };
-      // create the icon state and add it
+      // create the icon state
       const icon = {
-        id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons
+        id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons and it's arena
+        arena: currentArena, // the index of arenaStates to indicate where the icon belows
         top: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
         left: event.clientX - arenaRef.current.getBoundingClientRect().x - 30, // CSS positioning for icon
         label: "", // will be used later if a user customize the icon with a custom label
@@ -128,13 +157,17 @@ function Arena (props) {
         imgSrc: image,
       };
       // tell server an icon was created, sends the icon object
-      console.log(`Notifying server of a new icon spawn`);
       socket.emit('iconSpawn', icon);
-      // add the icon which triggers a rerender
-      setIcons( (prevIcons) => {
-        return [...prevIcons, icon];
+      // add the icon to the current Arena and rerender
+      setArenaStates( (prevArenaStates) => {
+        return prevArenaStates.map( (arenaState, index) => {
+          if (icon.arena === index) {
+            arenaState.push(icon);
+          }
+          return arenaState;
+        });
       });
-      // update the CustomizeIcon selectedIcon to the recently added icon
+      // sets the current selected icon so CustomizeIcon is updated
       setSelectedIcon(icon);
     };
   };
@@ -142,42 +175,65 @@ function Arena (props) {
   // called by CustomizeIcon component to update an icon
   function customizeIconUpdateHandler(updatedIcon) {
     socket.emit('iconEdit', updatedIcon);
-    setIcons( (prevIcons) => {
-      return prevIcons.map( (icon) => {
-        return icon.id === updatedIcon.id ? updatedIcon : icon;
+    setArenaStates( (prevArenaStates) => {
+      return prevArenaStates.map( (arenaState, index) => {
+        // find the arenaState the updatedIcon should go to
+        if (updatedIcon.arena === index) {
+          // replace with updatedIcon
+          return arenaState.map( (prevIcon) => {
+            return prevIcon.id === updatedIcon.id ? updatedIcon : prevIcon;
+          })
+        } else {
+          return arenaState;
+        };
       });
     });
   };
 
-/*** socket.io listeners */
+  /*** socket.io listeners */
   React.useEffect( () => {
+
     socket.on('iconSpawn', (icon) => {
       console.log('Adding new icon');
-      setIcons( (prevIcons) => {
-        return [...prevIcons, icon];
+      setArenaStates( (prevArenaStates) => {
+        return prevArenaStates.map( (arenaState, index) => {
+          if (icon.arena === index) {
+            arenaState.push(icon);
+          }
+          return arenaState;
+        });
       });
     });
 
     socket.on('iconMove', (movement) => {
       console.log('Moving icon');
-      setIcons( (prevIcons) => {
-        return prevIcons.map( (icon) => {
-          if (icon.id === movement.id) {
-            return {...icon, top: movement.top, left: movement.left};
-          } else {
-            return icon;
+      setArenaStates( (prevArenaStates) => {
+        return prevArenaStates.map( (arenaState, index) => {
+          // find the arena that the icon belonged to
+          if (index === movement.arena) {
+            // find the icon and replace it with new values
+            return arenaState.map( (icon) => {
+              return icon.id === movement.id ? {...icon, top: movement.top, left: movement.left} : icon;
+            });
           };
+          return arenaState;
         });
       });
     });
 
     socket.on('iconEdit', (editedIcon) => {
-      setIcons( (prevIcons) => {
-        return prevIcons.map( (icon) => {
-          return icon.id === editedIcon.id ? editedIcon : icon;
+      setArenaStates( (prevArenaStates) => {
+        return prevArenaStates.map( (arenaState, index) => {
+          if (editedIcon.arena === index) {
+            return arenaState.map( (prevIcon) => {
+              return prevIcon.id === editedIcon.id ? editedIcon : prevIcon;
+            })
+          } else {
+            return arenaState;
+          };
         });
       });
-    })
+    });
 
     socket.on('joinedRoom', (roomId) => {
       console.log(`Joined room: ${roomId}`);
@@ -194,9 +250,9 @@ function Arena (props) {
     };
   }, []);
 
-  // renders the Arena icons based on the icon states
+  // renders the current arenaState's icons
   function renderIcons() {
-    return icons.map( (icon) => {
+    return arenaStates[currentArena].map( (icon) => {
       return (
         <div
           id={icon.id}
@@ -234,7 +290,7 @@ function Arena (props) {
     onDragOver={onDragOverHandler} // browser drag and drop API
     onDrop={onDragDropHandler} // browser drag and drop API
     >
-      Arena
+      {`Current room: ${room}`}
       {renderIcons()}
       <CustomizeIcon
         selectedIcon={selectedIcon}

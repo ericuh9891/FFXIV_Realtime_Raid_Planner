@@ -1,5 +1,10 @@
 # FFXIV Realtime Raid Planner
 
+## TODO:
+- Implement ArenaStates for multistep function for app
+  - Add tabs, 1,2,3,4,...,n for multistep arena and the + and garbage can tabs
+    - Create onclick functionality for tabs
+
 ## Client
 ### TODO:
 - Curate list of icons
