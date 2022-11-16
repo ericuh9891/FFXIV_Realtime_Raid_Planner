@@ -1,14 +1,22 @@
 import React from 'react';
 import './CustomizeIcon.css';
 
-/**
- * When customizing icons, this should receive a passed in function from props to edit the icon state in Arena.
- * The function that changes the icon state should have id and the changed data (a new icon state) as parameters.
- * 
- */
-
 function CustomizeIcon(props) {
-  const currentIcon = props.selectedIcon;
+  // find the icon in arenaState
+  function findIcon() {
+    let arenaState = props.arenaStates[props.selectedIcon.arena];
+    let icon = null;
+    for(let i = 0; i < arenaState.length; ++i){
+      if(arenaState[i].id === props.selectedIcon.id){
+        icon = arenaState[i];
+        console.log('Icon found in CustomizeIcon\'s findIcon function');
+        return icon;
+      };
+    };
+    console.log('Icon not found in CustomizeIcon\'s findIcon function');
+  };
+
+  const currentIcon = props.selectedIcon ? findIcon() : null; // makes sure there's an icon to find
   const labelRef = React.useRef();
 
   function onInputHandler(event) {
@@ -32,10 +40,10 @@ function CustomizeIcon(props) {
         value={currentIcon && currentIcon.label} // checks if a label value exists
       >
       </input>
-      {props.selectedIcon != undefined &&
+      {currentIcon != undefined &&
         <img
           className='CustomizeIcon-Icon'
-          src={props.selectedIcon.imgSrc}
+          src={currentIcon.imgSrc}
         >
         </img>
       }

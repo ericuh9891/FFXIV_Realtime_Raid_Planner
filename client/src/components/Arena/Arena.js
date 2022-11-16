@@ -57,7 +57,7 @@ function Arena (props) {
 
   const [arenaStates, setArenaStates] = React.useState([[]]);
   const [currentArena, setCurrentArena] = React.useState(0); // may be needed later when there are multiple arenaStates
-  const [selectedIcon, setSelectedIcon] = React.useState(null);
+  const [selectedIcon, setSelectedIcon] = React.useState(null); // should reference icon id and arena id in arenaState
   const [room, setRoom] = React.useState(''); // may be useful later if I decide to refactor to client keeping track of rooms
   const arenaRef = React.useRef();
 
@@ -91,7 +91,7 @@ function Arena (props) {
       elementDrag(event, icon, arenaRect);
     };
     // sets the current selected icon so CustomizeIcon is updated
-    setSelectedIcon( () => icon);
+    setSelectedIcon({id: icon.id, arena: icon.arena});
   };
 
   function elementDrag(event, icon, arenaRect) {
@@ -168,7 +168,7 @@ function Arena (props) {
         });
       });
       // sets the current selected icon so CustomizeIcon is updated
-      setSelectedIcon(icon);
+      setSelectedIcon({id: icon.id, arena: icon.arena});
     };
   };
 
@@ -233,6 +233,9 @@ function Arena (props) {
           };
         });
       });
+      if (selectedIcon.id === editedIcon.id) {
+        setSelectedIcon({id: editedIcon.id, arena: editedIcon.arena});
+      }
     });
 
     socket.on('joinedRoom', (roomId) => {
@@ -293,8 +296,10 @@ function Arena (props) {
       {`Current room: ${room}`}
       {renderIcons()}
       <CustomizeIcon
+        arenaStates={arenaStates}
         selectedIcon={selectedIcon}
         updateIcon={customizeIconUpdateHandler}
+        socket={socket}
       ></CustomizeIcon>
     </div>
   );
