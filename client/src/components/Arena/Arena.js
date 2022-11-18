@@ -34,7 +34,8 @@ function Arena (props) {
    * [
    *   iconState1[],
    *   iconState2[],
-   *   iconState3[],
+   *   ...
+   *   iconStateN[],
    * ]
    */
 
@@ -240,6 +241,7 @@ function Arena (props) {
 
     socket.on('joinedRoom', (roomId) => {
       console.log(`Joined room: ${roomId}`);
+      window.history.replaceState(null, '', `${roomId}`);
       setRoom( () => roomId);
     })
     // clean up socket listeners on component dismount
