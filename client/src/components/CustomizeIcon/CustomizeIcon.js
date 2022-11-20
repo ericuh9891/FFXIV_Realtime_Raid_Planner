@@ -4,6 +4,9 @@ import './CustomizeIcon.css';
 function CustomizeIcon(props) {
   // find the icon in arenaState
   function findIcon() {
+    console.log('Finding icon in CustomizeIcon')
+    console.error(`selectedIcon is:`)
+    console.error(props.selectedIcon);
     let arenaState = props.arenaStates[props.selectedIcon.arena];
     let icon = null;
     for(let i = 0; i < arenaState.length; ++i){

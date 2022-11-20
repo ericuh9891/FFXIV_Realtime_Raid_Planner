@@ -1,6 +1,7 @@
 import React from 'react';
 import './Arena.css';
 import CustomizeIcon from '../CustomizeIcon/CustomizeIcon.js';
+import Multistep from '../Multistep/Multistep.js'
 
 // may need to move this to App component in the future if socket is needed in higher level components
 import io from 'socket.io-client'; 
@@ -82,7 +83,7 @@ function Arena (props) {
         break;
       };
       // error, icon should always be found
-      console.log('Icon not found in function onMouseDownHandler');
+      console.error('Icon not found in function onMouseDownHandler');
     };
     // get the arena's DOM CSS properties
     const arenaRect = arenaRef.current.getBoundingClientRect();
@@ -138,7 +139,7 @@ function Arena (props) {
     const name = event.dataTransfer.getData('text/plain');
     // check if an icon name exists
     if (!name) { // if empty string is returned
-      console.log("No icon name in drop event's dataTransfer getData()");
+      console.error("No icon name in drop event's dataTransfer getData()");
     } else { // if an icon name was retrieved
       // get the image from props based on the retrieved name
       let image = null;
@@ -191,6 +192,56 @@ function Arena (props) {
     });
   };
 
+  // called by Multistep component to add a new arenaState
+  function multistepAddArenaState(event) {
+    console.log('Added new arena state')
+    // create new copy of currently selected arena with icons copied over
+    let newArenaState = arenaStates[currentArena].map((icon) => {
+      return {...icon, arena: arenaStates.length};
+    });
+    // add the new copy of currently selected arena
+    setArenaStates( (prevArenaStates) => {
+      let newArenaStates =  prevArenaStates.map( (arenaState) => {
+        return arenaState;
+      });
+      newArenaStates.push(newArenaState);
+      return newArenaStates;
+    });
+    // set currentArena to the newly create arenaState
+    setCurrentArena( () => arenaStates.length);
+    socket.emit('newArena', newArenaState);
+  };
+
+  // called by Multistep component to delete an arenaState
+  function multistepDeleteArenaState(event) {
+    // guard against performing deletion on a single arenaState in arenaStates
+    if(arenaStates.length <= 1) {
+      console.log('Only one arenaState left, cannot delete')
+      return;
+    }
+    console.log(`Deleting arena state ${currentArena+1}`)
+    socket.emit('deleteArena', currentArena);
+    setArenaStates( (prevArenaStates) => {
+      // create a new copy of arenaStates
+      let newArenaStates = prevArenaStates.map( (arena) => arena);
+      setSelectedIcon(null);
+      newArenaStates.splice(currentArena, 1)
+      // for each icon in arenaState that got shifted over to the left index from deletion needs
+      // to be updated to the current position of it's array
+      for(let i = currentArena; i < newArenaStates.length; ++i){
+        for(let j = 0; j < newArenaStates[i].length; ++j){
+          newArenaStates[i][j] = {...newArenaStates[i][j], arena: i};
+        }
+      }
+      if(currentArena >= 1){
+        console.log(`decrementing currentArena`);
+        setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
+      }
+      console.log(`currentArena: ${currentArena}`)
+      return newArenaStates;
+    });
+  };
+
   /*** socket.io listeners */
   React.useEffect( () => {
 
@@ -207,7 +258,7 @@ function Arena (props) {
     });
 
     socket.on('iconMove', (movement) => {
-      console.log('Moving icon');
+      // console.log('Moving icon');
       setArenaStates( (prevArenaStates) => {
         return prevArenaStates.map( (arenaState, index) => {
           // find the arena that the icon belonged to
@@ -243,7 +294,78 @@ function Arena (props) {
       console.log(`Joined room: ${roomId}`);
       window.history.replaceState(null, '', `${roomId}`);
       setRoom( () => roomId);
-    })
+    });
+
+    socket.on('newArena', (newArenaState) => {
+      console.log(`Adding new arena`);
+      setArenaStates( (prevArenaStates) => {
+        let newArenaStates = prevArenaStates.map( (arena) => arena);
+        newArenaStates.push(newArenaState);
+        return newArenaStates;
+      });
+    });
+
+    socket.on('deleteArena', (arenaIndex) => {
+      console.log(`Recieved message to delate arenaState: ${arenaIndex}`)
+      // guard against performing deletion on a single arenaState in arenaStates
+      console.log(`arenaStates length: ${arenaStates.length}`);
+      console.log(arenaStates);
+      if(arenaStates.length <= 1) {
+        console.log('Only one arenaState left, cannot delete')
+        return;
+      }
+      console.log(`Deleting arena state ${arenaIndex+1}`)
+      setArenaStates( (prevArenaStates) => {
+        // create a new copy of arenaStates
+        let newArenaStates = prevArenaStates.map( (arena) => arena);
+        setSelectedIcon(null);// probably change this behaviour later
+        newArenaStates.splice(arenaIndex, 1)
+        // change arena if the currentArena is about to be deleted 
+        if(currentArena >= arenaIndex && currentArena >= 1){
+          console.log(`decrementing currentArena`);
+          setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
+        }
+        // for each icon in arenaState that got shifted over to the left index from deletion needs
+        // to be updated to the current position of it's array
+        for(let i = arenaIndex; i < newArenaStates.length; ++i){
+          for(let j = 0; j < newArenaStates[i].length; ++j){
+            newArenaStates[i][j] = {...newArenaStates[i][j], arena: i};
+          }
+        }
+        console.log(`currentArena: ${currentArena}`)
+        return newArenaStates;
+      });
+
+      /*
+      console.log(`Deleteing arenaState: ${arenaIndex+1}`)
+      // guard against performing deletion on a empty arenaStates
+      if(arenaStates.length <= 1) {
+        console.log('No arena to delete')
+        return;
+      }
+      console.log('Deleting arena state')
+      setArenaStates( (prevArenaStates) => {
+        // create a new copy of arenaStates
+        let newArenaStates = prevArenaStates.map( (arena) => arena);
+        // delete the state based on index aka currentArena
+        console.log(`Before deletion:`);
+        console.log(newArenaStates);
+        console.log(`Deleted arena:`);
+        console.log(newArenaStates.splice(arenaIndex, 1));
+        console.log(`After deletion:`);
+        console.log(newArenaStates);
+        if(selectedIcon != null && selectedIcon.arena === arenaIndex) {
+          setSelectedIcon(null);
+        }
+        if(currentArena === arenaIndex && currentArena >= 1){
+          console.log(`Current Arena: ${currentArena}, Arena Index: ${arenaIndex}`);
+          setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
+        }
+        return newArenaStates;
+      });
+      */
+    });
+
     // clean up socket listeners on component dismount
     return () => {
       // leave the room the socket is in
@@ -252,8 +374,10 @@ function Arena (props) {
       socket.off('iconMove');
       socket.off('iconEdit');
       socket.off('joinedRoom');
+      socket.off('newArena');
+      socket.off('deleteArena');
     };
-  }, []);
+  }, [arenaStates, currentArena]);
 
   // renders the current arenaState's icons
   function renderIcons() {
@@ -295,8 +419,15 @@ function Arena (props) {
     onDragOver={onDragOverHandler} // browser drag and drop API
     onDrop={onDragDropHandler} // browser drag and drop API
     >
-      {`Current room: ${room}`}
       {renderIcons()}
+      <Multistep
+        multistepAddArenaState={multistepAddArenaState}
+        setCurrentArena={setCurrentArena}
+        multistepDeleteArenaState={multistepDeleteArenaState}
+        arenaStates={arenaStates}
+        currentArena={currentArena}
+      ></Multistep>
+      {`Current room: ${room}`}
       <CustomizeIcon
         arenaStates={arenaStates}
         selectedIcon={selectedIcon}

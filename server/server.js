@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
     socket.to(findRoomId(socket)).emit('iconEdit', editedIcon);
   });
 
-  // need to implement a socket to listen for a createRoom message for when a user connects to the base homepage with no room
+  // create new room server side and joins it
   socket.on('createRoom', () => {
     const newRoom = roomIdGenerator();
     roomList.add(newRoom);
@@ -59,8 +59,18 @@ io.on('connection', (socket) => {
     console.log(socket.rooms);
     socket.emit('joinedRoom', roomId);
   })
-  // tells all other connected sockets to update their icons state
-  // socket.on('iconsUpdate', (message) => socket.broadcast.emit('iconsUpdate', message));
+  
+  // new arenaState added
+  socket.on('newArena', (newArenaState) => {
+    console.log(`User: ${socket.id} added a new arena`);
+    socket.to(findRoomId(socket)).emit('newArena', newArenaState);
+  });
+
+  // delete arenaState
+  socket.on('deleteArena', (arenaIndex) => {
+    console.log(`User: ${socket.id} deleted an arena`);
+    socket.to(findRoomId(socket)).emit('deleteArena', arenaIndex);
+  })
 
   socket.on('disconnect', () => console.log(`User disconnected: ${socket.id}`));
 });
