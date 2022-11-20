@@ -16,7 +16,7 @@ if (window.location.pathname === '/'){ // base homepage with not pathname/roomId
   // if a pathname/roomId is in the URL then user will be joined into that room
   // only correct pathname/roomId will allow users to get the web application page
   socket.emit('joinRoom', window.location.pathname.split('/')[1]);
-  // if a user uses a URL that has an invalid roomId then server sends an error message/webpage to user
+  // if a user uses a URL that has an invalid roomId then server sends an error webpage to user
 };
 
 // generates unique IDs for user
@@ -33,33 +33,36 @@ function Arena (props) {
   /**
    * Arena states representation should be an array of Icon states arrays
    * [
-   *   iconState1[],
-   *   iconState2[],
+   *   arenaState1[],
+   *   arenaState2[],
    *   ...
-   *   iconStateN[],
+   *   arenaStateN[],
    * ]
    */
 
   /**
-   * Each Icon States should be an array of Icon objects
+   * Each arenaState should be an array of Icon objects
    */
 
   /** 
    * Icon object representation should be as follow: 
-   * {
-   *   id: number, // id is made by adding the socketID and a unique number generator
-   *   arena: number, // the arena it belongs to, the index of arenaStates
-   *   top: number,
-   *   left: number,
-   *   label: string,
-   *   name: string,
-   *   imgSrc: variable containing loaded in img src, // may need to change it so that it points to a iconsList instead of hardcoded img src path
+   * { // id combined with arena are the unique identifier for icons
+   *   id: Number, // id is made by adding the socketID and a unique number generator
+   *   arena: Number, // the arena it belongs to, the 0 based index of arenaStates
+   *   top: Number,
+   *   left: Number,
+   *   label: String,
+   *   name: String,
+   *   // may need to change it so that it points to a iconsList instead of hardcoded img src path from I think webpack.js compiling
+   *   imgSrc: String variable containing loaded in img src, 
    * }
    */
 
   const [arenaStates, setArenaStates] = React.useState([[]]);
-  const [currentArena, setCurrentArena] = React.useState(0); // may be needed later when there are multiple arenaStates
-  const [selectedIcon, setSelectedIcon] = React.useState(null); // should reference icon id and arena id in arenaState
+  // pointer to the index of arenaStates telling react which arena to render, 0 based indexing
+  const [currentArena, setCurrentArena] = React.useState(0); 
+  // references icon id and arena id in arenaState as object literal eg. {id: Number, arena: Number}
+  const [selectedIcon, setSelectedIcon] = React.useState(null); 
   const [room, setRoom] = React.useState(''); // may be useful later if I decide to refactor to client keeping track of rooms
   const arenaRef = React.useRef();
 
@@ -100,7 +103,7 @@ function Arena (props) {
     event = event || window.event;
     event.preventDefault();
     // updates icon position without rerender, only allows icons to move within arena bounds
-    // FIXME: should probably not use hardcoded values of 30 and extract the icon width/height
+    // TODO: should probably not use hardcoded values of 30 and extract the icon width/height
     if (arenaRect.top+30 <= event.clientY &&
       event.clientY <= arenaRect.top+arenaRect.height-30){
         icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
@@ -109,7 +112,7 @@ function Arena (props) {
       event.clientX <= arenaRect.left+arenaRect.width-30){
         icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
       };
-    // notify server of iconMove
+    // notify server of icon movement
     socket.emit('iconMove', {id: icon.id, arena: icon.arena, top: icon.top, left: icon.left});
     // update the icon in arenaStates
     setArenaStates( (prevArenaStates) => {
@@ -151,7 +154,7 @@ function Arena (props) {
       // create the icon state
       const icon = {
         id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons and it's arena
-        arena: currentArena, // the index of arenaStates to indicate where the icon belows
+        arena: currentArena, // the index of arenaStates to indicate where the icon belongs
         top: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
         left: event.clientX - arenaRef.current.getBoundingClientRect().x - 30, // CSS positioning for icon
         label: "", // will be used later if a user customize the icon with a custom label
@@ -219,25 +222,27 @@ function Arena (props) {
       console.log('Only one arenaState left, cannot delete')
       return;
     }
-    console.log(`Deleting arena state ${currentArena+1}`)
+    console.log(`Deleting step ${currentArena+1}`);
     socket.emit('deleteArena', currentArena);
     setArenaStates( (prevArenaStates) => {
       // create a new copy of arenaStates
       let newArenaStates = prevArenaStates.map( (arena) => arena);
+      // null the current selected Icon as it's being deleted
       setSelectedIcon(null);
+      // delete the arenaState/step
       newArenaStates.splice(currentArena, 1)
-      // for each icon in arenaState that got shifted over to the left index from deletion needs
-      // to be updated to the current position of it's array
+      // for each icon in arenaState that got shifted over to the left index from deletion, each arenaState
+      // to the right needs to be updated to the current position of it's array
       for(let i = currentArena; i < newArenaStates.length; ++i){
         for(let j = 0; j < newArenaStates[i].length; ++j){
           newArenaStates[i][j] = {...newArenaStates[i][j], arena: i};
         }
       }
+      // shift currentArena to the left of arenaStates to render the arena/step before it
       if(currentArena >= 1){
-        console.log(`decrementing currentArena`);
+        console.log('Rendering arena/step before deleted arena');
         setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
       }
-      console.log(`currentArena: ${currentArena}`)
       return newArenaStates;
     });
   };
@@ -306,64 +311,34 @@ function Arena (props) {
     });
 
     socket.on('deleteArena', (arenaIndex) => {
-      console.log(`Recieved message to delate arenaState: ${arenaIndex}`)
-      // guard against performing deletion on a single arenaState in arenaStates
-      console.log(`arenaStates length: ${arenaStates.length}`);
-      console.log(arenaStates);
+      console.log(`Recieved message to delete step: ${arenaIndex}`);
+      // guard against deleting arenaState if there's only 1 state
       if(arenaStates.length <= 1) {
         console.log('Only one arenaState left, cannot delete')
         return;
       }
-      console.log(`Deleting arena state ${arenaIndex+1}`)
+      console.log(`Deleting step ${arenaIndex+1}`);
       setArenaStates( (prevArenaStates) => {
         // create a new copy of arenaStates
         let newArenaStates = prevArenaStates.map( (arena) => arena);
-        setSelectedIcon(null);// probably change this behaviour later
-        newArenaStates.splice(arenaIndex, 1)
+        // probably change this behaviour later, if user is editing an icon in an arena not being deleted, this would interrupt them
+        // but changing it to not unselect an icon would require reacquiring selectedIcon after arenaStates have shifted
+        setSelectedIcon(null);
+        // delete the arenaState/step
+        newArenaStates.splice(arenaIndex, 1);
         // change arena if the currentArena is about to be deleted 
         if(currentArena >= arenaIndex && currentArena >= 1){
-          console.log(`decrementing currentArena`);
-          setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
-        }
+          setCurrentArena( (prevCurrentArena) => prevCurrentArena-1);
+        };
         // for each icon in arenaState that got shifted over to the left index from deletion needs
         // to be updated to the current position of it's array
         for(let i = arenaIndex; i < newArenaStates.length; ++i){
           for(let j = 0; j < newArenaStates[i].length; ++j){
             newArenaStates[i][j] = {...newArenaStates[i][j], arena: i};
-          }
-        }
-        console.log(`currentArena: ${currentArena}`)
+          };
+        };
         return newArenaStates;
       });
-
-      /*
-      console.log(`Deleteing arenaState: ${arenaIndex+1}`)
-      // guard against performing deletion on a empty arenaStates
-      if(arenaStates.length <= 1) {
-        console.log('No arena to delete')
-        return;
-      }
-      console.log('Deleting arena state')
-      setArenaStates( (prevArenaStates) => {
-        // create a new copy of arenaStates
-        let newArenaStates = prevArenaStates.map( (arena) => arena);
-        // delete the state based on index aka currentArena
-        console.log(`Before deletion:`);
-        console.log(newArenaStates);
-        console.log(`Deleted arena:`);
-        console.log(newArenaStates.splice(arenaIndex, 1));
-        console.log(`After deletion:`);
-        console.log(newArenaStates);
-        if(selectedIcon != null && selectedIcon.arena === arenaIndex) {
-          setSelectedIcon(null);
-        }
-        if(currentArena === arenaIndex && currentArena >= 1){
-          console.log(`Current Arena: ${currentArena}, Arena Index: ${arenaIndex}`);
-          setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
-        }
-        return newArenaStates;
-      });
-      */
     });
 
     // clean up socket listeners on component dismount
@@ -377,7 +352,7 @@ function Arena (props) {
       socket.off('newArena');
       socket.off('deleteArena');
     };
-  }, [arenaStates, currentArena]);
+  }, [arenaStates, currentArena, selectedIcon]);
 
   // renders the current arenaState's icons
   function renderIcons() {

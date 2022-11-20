@@ -4,19 +4,18 @@ import './CustomizeIcon.css';
 function CustomizeIcon(props) {
   // find the icon in arenaState
   function findIcon() {
-    console.log('Finding icon in CustomizeIcon')
-    console.error(`selectedIcon is:`)
-    console.error(props.selectedIcon);
     let arenaState = props.arenaStates[props.selectedIcon.arena];
     let icon = null;
     for(let i = 0; i < arenaState.length; ++i){
       if(arenaState[i].id === props.selectedIcon.id){
         icon = arenaState[i];
-        console.log('Icon found in CustomizeIcon\'s findIcon function');
+        console.log('Clicked on icon:');
+        console.log(icon);
         return icon;
       };
     };
-    console.log('Icon not found in CustomizeIcon\'s findIcon function');
+    // icon should always be found, if not found means arenaStates or selectedIcon are not properly set
+    console.error('Icon not found in CustomizeIcon\'s findIcon function');
   };
 
   const currentIcon = props.selectedIcon ? findIcon() : null; // makes sure there's an icon to find
@@ -25,13 +24,11 @@ function CustomizeIcon(props) {
   function onInputHandler(event) {
     currentIcon.label = labelRef.current.value;
     props.updateIcon(currentIcon);
-  }
+  };
 
   return (
     <div 
       className='CustomizeIcon'
-      onDragOver={null}
-      onDrop={null}
       draggable='false'
     >
       Icon Preview and Customization
@@ -43,9 +40,10 @@ function CustomizeIcon(props) {
         value={currentIcon && currentIcon.label} // checks if a label value exists
       >
       </input>
-      {currentIcon != undefined &&
+      {currentIcon !== undefined &&
         <img
           className='CustomizeIcon-Icon'
+          alt='Current selected icon'
           src={currentIcon.imgSrc}
         >
         </img>

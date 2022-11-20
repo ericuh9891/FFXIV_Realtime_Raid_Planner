@@ -6,8 +6,7 @@ import trashIcon from './trashIcon.png'
 function Multistep(props) {
 
   function selectStep(event) {
-    console.log(event)
-    console.log(`Multistep: selectStep: ${event.target.id}`);
+    // sets the currentArena by the clicked HTML element ID which maps to the 0 based index of arenaStates
     props.setCurrentArena( () => Number(event.target.id));
   }
 
@@ -22,8 +21,9 @@ function Multistep(props) {
         >
           {index+1}
         </div>
-      )
-    })
+      );
+    });
+    // add the + and delete at the end
     steps.push(
       (
         <div
@@ -40,21 +40,22 @@ function Multistep(props) {
           className='Multistep-step unselected'
           id={'deleteStep'}
           key={'deleteStep'}
+          alt='Trashbin Icon'
           src={trashIcon}
           onClick={(event) => props.multistepDeleteArenaState(event)}
         >
         </img>
       )
-    )
+    );
     return steps;
-  }
+  };
   return (
     <div
       className='Multistep'
     >
       {renderSteps()}
     </div>
-  )
+  );
 };
 
 export default Multistep;
