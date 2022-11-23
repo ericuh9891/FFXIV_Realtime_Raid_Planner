@@ -2,8 +2,10 @@ import React from 'react';
 import './CustomizeIcon.css';
 
 function CustomizeIcon(props) {
+  console.log(props);
   // find the icon in arenaState
   function findIcon() {
+    console.log('Running findIcon()');
     let arenaState = props.arenaStates[props.selectedIcon.arena];
     let icon = null;
     for(let i = 0; i < arenaState.length; ++i){
@@ -20,6 +22,7 @@ function CustomizeIcon(props) {
 
   const currentIcon = props.selectedIcon ? findIcon() : null; // makes sure there's an icon to find
   const labelRef = React.useRef();
+  console.log(currentIcon);
 
   function onInputHandler(event) {
     currentIcon.label = labelRef.current.value;
@@ -40,7 +43,7 @@ function CustomizeIcon(props) {
         value={currentIcon && currentIcon.label} // checks if a label value exists
       >
       </input>
-      {currentIcon !== undefined &&
+      {currentIcon !== null &&
         <img
           className='CustomizeIcon-Icon'
           alt='Current selected icon'

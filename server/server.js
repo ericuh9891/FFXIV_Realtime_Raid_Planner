@@ -28,17 +28,21 @@ function findRoomId(socket) {
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
   socket.on('arena', (message) => console.log(message));
+
   /** Icon syncing between users */
+
   // icon spawn
   socket.on('iconSpawn', (icon) => {
     console.log(`User: ${socket.id} spawned a new icon:`);
     socket.to(findRoomId(socket)).emit('iconSpawn', icon)
   });
+
   // icon move
   socket.on('iconMove', (movement) => {
     console.log(`User: ${socket.id} moved an icon`);
     socket.to(findRoomId(socket)).emit('iconMove', movement);
   });
+
   // icon edit
   socket.on('iconEdit', (editedIcon) => {
     console.log(`User: ${socket.id} edited an icon`);
@@ -53,13 +57,28 @@ io.on('connection', (socket) => {
     socket.join(newRoom);
     socket.emit('joinedRoom', newRoom);
   });
+
   // join room
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
     console.log(socket.rooms);
     socket.emit('joinedRoom', roomId);
-  })
+    const roomMembers = io.in(roomId).fetchSockets(); // gets the Socket objects from the passed in roomId and returns a promise
+    roomMembers.then((result) => {
+      // gets the first socket in fetchSockets() which I think is an array of sockets
+      const oldestSocket = result[0]; 
+      console.log(`Messaging the first joined socket: ${oldestSocket.id} for arenaStates`);
+      // send the requester socketId so on returning with arenaStates, server knows which socket to send the arenaStates
+      oldestSocket.emit('requestArenaStates', socket.id); 
+    })
+  });
   
+  // return of arenaStates from a request, gives the arenaStates and the requester's socketId
+  socket.on('arenaStatesForSocketId', (arenaStates, requesterSocketId) => {
+    // send the arenaStates to the requester by the socketId
+    io.to(requesterSocketId).emit('updateArenaStates', arenaStates);
+  });
+
   // new arenaState added
   socket.on('newArena', (newArenaState) => {
     console.log(`User: ${socket.id} added a new arena`);
@@ -70,10 +89,14 @@ io.on('connection', (socket) => {
   socket.on('deleteArena', (arenaIndex) => {
     console.log(`User: ${socket.id} deleted an arena`);
     socket.to(findRoomId(socket)).emit('deleteArena', arenaIndex);
-  })
+  });
 
   socket.on('disconnect', () => console.log(`User disconnected: ${socket.id}`));
 });
+
+// io.on('connection', (socket) => {
+//   console.log(socket.handshake.issued);
+// });
 
 // serve the dev build, change to production builds when ready
 app.use(express.static('../client/build'));
@@ -109,6 +132,10 @@ app.get('/:room', (req, res) => {
     root: path.join(__dirname,'../client/build')
   }
   // if the room provided in URL exists, then web app is sent
+  // FIXME: roomList should use the list in socket.io instead of my custom one because
+  // I think socket.io automatically cleans up empty rooms which better fits my usecase
+  // although it's not critical because empty rooms have no data so there's no issues if it
+  // gets reused
   if (roomList.has(req.params.room)){
     res.sendFile('/index.html', options);
   } else {

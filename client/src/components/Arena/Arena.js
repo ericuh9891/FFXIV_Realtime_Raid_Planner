@@ -341,6 +341,17 @@ function Arena (props) {
       });
     });
 
+    socket.on('requestArenaStates', (requesterSocketId) => {
+      socket.emit('arenaStatesForSocketId', arenaStates, requesterSocketId);
+    });
+
+    socket.on('updateArenaStates', (updatedArenaStates) => {
+      setArenaStates( () => updatedArenaStates);
+    });
+
+    // test messaging from server to client
+    socket.on('serverMessage', (message) => console.log(message));
+
     // clean up socket listeners on component dismount
     return () => {
       // leave the room the socket is in
@@ -351,6 +362,9 @@ function Arena (props) {
       socket.off('joinedRoom');
       socket.off('newArena');
       socket.off('deleteArena');
+      socket.off('requestArenaStates');
+      socket.off('updateArenaStates');
+      socket.off('serverMessage');
     };
   }, [arenaStates, currentArena, selectedIcon]);
 
