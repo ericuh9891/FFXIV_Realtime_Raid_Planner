@@ -1,0 +1,5 @@
+.CustomContextMenu {
+  position: absolute;
+  background-color: lightgrey;
+  z-index: 10000;
+}

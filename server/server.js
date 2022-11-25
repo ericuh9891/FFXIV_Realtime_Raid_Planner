@@ -91,6 +91,12 @@ io.on('connection', (socket) => {
     socket.to(findRoomId(socket)).emit('deleteArena', arenaIndex);
   });
 
+  // delete icon
+  socket.on('deleteIcon', (targetIcon) => {
+    console.log(`User: ${socket.id} deleted an icon`);
+    socket.to(findRoomId(socket)).emit('deleteIcon', targetIcon);
+  })
+
   socket.on('disconnect', () => console.log(`User disconnected: ${socket.id}`));
 });
 

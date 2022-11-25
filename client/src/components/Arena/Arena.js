@@ -2,6 +2,7 @@ import React from 'react';
 import './Arena.css';
 import CustomizeIcon from '../CustomizeIcon/CustomizeIcon.js';
 import Multistep from '../Multistep/Multistep.js'
+import CustomContextMenu from '../CustomContextMenu/CustomContextMenu';
 
 // may need to move this to App component in the future if socket is needed in higher level components
 import io from 'socket.io-client'; 
@@ -47,7 +48,7 @@ function Arena (props) {
   /** 
    * Icon object representation should be as follow: 
    * { // id combined with arena are the unique identifier for icons
-   *   id: Number, // id is made by adding the socketID and a unique number generator
+   *   id: String, // id is made by adding the socketID and a unique number generator
    *   arena: Number, // the arena it belongs to, the 0 based index of arenaStates
    *   top: Number,
    *   left: Number,
@@ -58,12 +59,18 @@ function Arena (props) {
    * }
    */
 
+  /**
+   * selectedIcon is an object: {id: String, arena: Number} of the currently selected icon
+   */
+
   const [arenaStates, setArenaStates] = React.useState([[]]);
   // pointer to the index of arenaStates telling react which arena to render, 0 based indexing
   const [currentArena, setCurrentArena] = React.useState(0); 
   // references icon id and arena id in arenaState as object literal eg. {id: Number, arena: Number}
   const [selectedIcon, setSelectedIcon] = React.useState(null); 
   const [room, setRoom] = React.useState(''); // may be useful later if I decide to refactor to client keeping track of rooms
+  // controls when to display custom context menu
+  const [customContextMenu, setCustomContextMenu] = React.useState({top: 0, left: 0, isShown: false});
   const arenaRef = React.useRef();
 
   /*** Event Handlers */
@@ -221,7 +228,7 @@ function Arena (props) {
     if(arenaStates.length <= 1) {
       console.log('Only one arenaState left, cannot delete')
       return;
-    }
+    };
     console.log(`Deleting step ${currentArena+1}`);
     socket.emit('deleteArena', currentArena);
     setArenaStates( (prevArenaStates) => {
@@ -236,16 +243,47 @@ function Arena (props) {
       for(let i = currentArena; i < newArenaStates.length; ++i){
         for(let j = 0; j < newArenaStates[i].length; ++j){
           newArenaStates[i][j] = {...newArenaStates[i][j], arena: i};
-        }
-      }
+        };
+      };
       // shift currentArena to the left of arenaStates to render the arena/step before it
       if(currentArena >= 1){
         console.log('Rendering arena/step before deleted arena');
         setCurrentArena( (prevCurrentArena) => prevCurrentArena-1)
-      }
+      };
       return newArenaStates;
     });
   };
+
+  // creates a custom context menu on right click
+  function contextMenuHandler(event) {
+    // prevent the default context menu from displaying
+    event.preventDefault();
+    // close any open customContextMenu that may be open
+    setCustomContextMenu( (prevCustomContextMenu) => {
+      return {...prevCustomContextMenu, isShown: false};
+    });
+    const offsets = arenaRef.current.getBoundingClientRect();
+    // set the new customContextMenu to the new position of the user click
+    setCustomContextMenu( (prevCustomContextMenu) => {
+      return {...prevCustomContextMenu, top: event.clientY, left: event.clientX - offsets.x, isShown: true};
+    });
+  };
+
+  // deletes icon called by CustomContextMenu component
+  function deleteIconHandler(event) {
+    // copy the selected Icon
+    const targetIcon = {...selectedIcon};
+    // erase so that we can proceed to deleting it in arenaStates
+    setSelectedIcon(null);
+    // create copy of arena
+    const newArenaStates = arenaStates.map( (arena) => arena);
+    // find the index of the icon to delete
+    const targetIndex = newArenaStates[targetIcon.arena].findIndex( (icon) => icon.id === targetIcon.id);
+    // find the icon in arenaStates and delete
+    newArenaStates[targetIcon.arena].splice(targetIndex, 1);
+    setArenaStates( () => newArenaStates);
+    socket.emit('deleteIcon', targetIcon);
+  }
 
   /*** socket.io listeners */
   React.useEffect( () => {
@@ -349,6 +387,27 @@ function Arena (props) {
       setArenaStates( () => updatedArenaStates);
     });
 
+    socket.on('deleteIcon', (targetIcon) => {
+      console.log(`Received deleteIcon message, targetIcon: ${targetIcon.id}, ${targetIcon.arena}`);
+      // if selectedIcon is the targetIcon then set it to null
+      if (selectedIcon != null && selectedIcon.id === targetIcon.id && selectedIcon.arena === targetIcon.arena) {
+        setSelectedIcon( () => null);
+        console.log('Current Icon is selected, setting to null');
+      }
+      // create copy of arena
+      const newArenaStates = arenaStates.map( (arena) => arena);
+      // find the index of the icon to delete
+      const targetIndex = newArenaStates[targetIcon.arena].findIndex( (icon) => icon.id === targetIcon.id);
+      if(targetIndex !== -1){
+        console.log(`Icon found at index: ${targetIndex}`)
+      } else {
+        console.log('Icon not found');
+      }
+      // find the icon in arenaStates and delete
+      newArenaStates[targetIcon.arena].splice(targetIndex, 1);
+      setArenaStates( () => newArenaStates);
+    });
+
     // test messaging from server to client
     socket.on('serverMessage', (message) => console.log(message));
 
@@ -364,6 +423,7 @@ function Arena (props) {
       socket.off('deleteArena');
       socket.off('requestArenaStates');
       socket.off('updateArenaStates');
+      socket.off('deleteIcon');
       socket.off('serverMessage');
     };
   }, [arenaStates, currentArena, selectedIcon]);
@@ -375,7 +435,7 @@ function Arena (props) {
         <div
           id={icon.id}
           className='Arena-Icon'
-          draggalbe='false'
+          draggable='false'
           style={{
             top: `${icon.top}px`, 
             left: `${icon.left}px`,
@@ -394,6 +454,7 @@ function Arena (props) {
             src={icon.imgSrc}
             alt={icon.name}
             draggable='false'
+            onContextMenu={contextMenuHandler}
           >
           </img>
         </div>
@@ -407,6 +468,8 @@ function Arena (props) {
     ref={arenaRef} 
     onDragOver={onDragOverHandler} // browser drag and drop API
     onDrop={onDragDropHandler} // browser drag and drop API
+    onContextMenu={(event) => event.preventDefault()}
+    onClick={(event) => {setCustomContextMenu( (prevCustomContextMenu) => ({...prevCustomContextMenu, isShown: false}))}}
     >
       {renderIcons()}
       <Multistep
@@ -423,6 +486,13 @@ function Arena (props) {
         updateIcon={customizeIconUpdateHandler}
         socket={socket}
       ></CustomizeIcon>
+      {customContextMenu.isShown &&
+        <CustomContextMenu
+          position={{top: customContextMenu.top, left: customContextMenu.left}}
+          deleteIconHandler={deleteIconHandler}
+        >
+        </CustomContextMenu>
+      }
     </div>
   );
 };
