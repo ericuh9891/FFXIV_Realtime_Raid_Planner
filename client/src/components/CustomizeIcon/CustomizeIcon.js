@@ -9,7 +9,6 @@ function CustomizeIcon(props) {
     for(let i = 0; i < arenaState.length; ++i){
       if(arenaState[i].id === props.selectedIcon.id){
         icon = arenaState[i];
-        console.log('Clicked on icon:');
         return icon;
       };
     };
@@ -44,6 +43,7 @@ function CustomizeIcon(props) {
           className='CustomizeIcon-Icon'
           alt='Current selected icon'
           src={currentIcon.imgSrc}
+          draggable='false'
         >
         </img>
       }

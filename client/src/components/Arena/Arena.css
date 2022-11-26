@@ -8,19 +8,30 @@
 }
 
 .Arena-Icon {
-  width: 60px;
-  height: 60px;
   position: absolute;
-  display: flex;
-  justify-content: center;
+  text-align: start;
 }
 
 .Arena-Icon-Img {
-  width: 100%;
-  height: 100%;
+  position: relative;
+  /* cursor: grab; */
 }
 
 .Arena-Icon-label {
   position: absolute;
-  top: -16px;
+  top: -20px;
+}
+
+.Arena-Resize-Img {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: whitesmoke;
+}
+
+.Arena-Rotate-Img {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: whitesmoke;
 }

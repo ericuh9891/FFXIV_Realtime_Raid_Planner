@@ -4,6 +4,9 @@ import CustomizeIcon from '../CustomizeIcon/CustomizeIcon.js';
 import Multistep from '../Multistep/Multistep.js'
 import CustomContextMenu from '../CustomContextMenu/CustomContextMenu';
 
+import resizeIconImg from './resizeIcon.png';
+import rotateIconImg from './rotateIcon.png';
+
 // may need to move this to App component in the future if socket is needed in higher level components
 import io from 'socket.io-client'; 
 
@@ -52,6 +55,8 @@ function Arena (props) {
    *   arena: Number, // the arena it belongs to, the 0 based index of arenaStates
    *   top: Number,
    *   left: Number,
+   *   width: Number,
+   *   height: Number,
    *   label: String,
    *   name: String,
    *   // may need to change it so that it points to a iconsList instead of hardcoded img src path from I think webpack.js compiling
@@ -87,13 +92,13 @@ function Arena (props) {
   function onMouseDownHandler(event) {
     // find the icon that was clicked
     let icon = null;
-    for(let i = 0; i < arenaStates[currentArena].length; ++i) {
+    for(let i = 0; i < arenaStates[currentArena].length; i++) {
       if (arenaStates[currentArena][i].id === event.currentTarget.id) {
         icon = arenaStates[currentArena][i];
         break;
       };
       // error, icon should always be found
-      console.error('Icon not found in function onMouseDownHandler');
+      console.warn('Icon not found in function onMouseDownHandler');
     };
     // get the arena's DOM CSS properties
     const arenaRect = arenaRef.current.getBoundingClientRect();
@@ -110,14 +115,13 @@ function Arena (props) {
     event = event || window.event;
     event.preventDefault();
     // updates icon position without rerender, only allows icons to move within arena bounds
-    // TODO: should probably not use hardcoded values of 30 and extract the icon width/height
-    if (arenaRect.top+30 <= event.clientY &&
-      event.clientY <= arenaRect.top+arenaRect.height-30){
-        icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - 30;
+    if (arenaRect.top+icon.height/2 <= event.clientY &&
+      event.clientY <= arenaRect.top+arenaRect.height-icon.height/2){
+        icon.top = event.clientY - arenaRef.current.getBoundingClientRect().y - (icon.height/2);
       };
-    if (arenaRect.left+30 <= event.clientX &&
-      event.clientX <= arenaRect.left+arenaRect.width-30){
-        icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - 30;
+    if (arenaRect.left+icon.width/2 <= event.clientX &&
+      event.clientX <= arenaRect.left+arenaRect.width-icon.width/2){
+        icon.left = event.clientX - arenaRef.current.getBoundingClientRect().x - (icon.width/2);
       };
     // notify server of icon movement
     socket.emit('iconMove', {id: icon.id, arena: icon.arena, top: icon.top, left: icon.left});
@@ -137,9 +141,60 @@ function Arena (props) {
     });
   };
 
-  // when icon move movement is done on mouseup event, removes onmousemove listener
-  function onMouseUpHandler(event){
+  // when icon move/resize movement is done on mouseup event, cleans up onmousemove listener
+  function onMouseUpHandler(event) {
     document.onmousemove = null;
+  };
+
+  // resize the icon image size when mouseDown on the resizeIconImg
+  function resizeOnMouseDownHandler(mouseDownEvent) {
+    console.log('resizeOnMouseDownHandler')
+    console.log(mouseDownEvent);
+    // find the icon that was clicked based on the ID
+    let icon = null;
+    for(let i = 0; i < arenaStates[currentArena].length; i++) {
+      if (arenaStates[currentArena][i].id === mouseDownEvent.currentTarget.id) {
+        icon = {...arenaStates[currentArena][i]};
+        break;
+      };
+      // error, icon should always be found
+      console.warn('Icon not found in function resizeOnMouseDownHandler');
+    };
+    // register a mouseMove handler onto the DOM maybe called resizeElement()
+    document.onmousemove = resizeElement;
+    // copy starting width and height
+    const startWidth = icon.width;
+    const startHeight = icon.height;
+    // get the starting mouse position of x and y on mouse down
+    let startX = mouseDownEvent.clientX;
+    let startY = mouseDownEvent.clientY;
+
+    function resizeElement(mouseMoveEvent) {
+      // get the deltas of starting position to the current mouse position
+      let deltaX = startX - mouseMoveEvent.clientX;
+      let deltaY = startY - mouseMoveEvent.clientY;
+      // get the largest delta so the aspect ratio is maintained when appling to width and height
+      let maxDelta = Math.max(deltaX, deltaY);
+      // apply it to the icon size
+      icon.width = startWidth - maxDelta;
+      icon.height = startHeight - maxDelta;
+      // notify server of new icon width and height
+      socket.emit('iconEdit', icon);
+      // apply the update into arenaStates with setArenaStates and replace it with the new icon properties
+      setArenaStates( (prevArenaStates) => {
+        return prevArenaStates.map( (arenaState, index) => {
+          // find the arenaState
+          if (icon.arena === index) {
+            // return a new arenaState after updating it with the icon
+            return arenaState.map( (prevIcon) => {
+              return prevIcon.id === icon.id ? icon : prevIcon;
+            });
+          } else {
+            return arenaState;
+          };
+        });
+      });
+    };
   };
  
   // spawns an icon from the dragged icon from IconList
@@ -162,8 +217,10 @@ function Arena (props) {
       const icon = {
         id: getUniqueId.next().value, // generates a unique ID that's going to be used to access and identify the icons and it's arena
         arena: currentArena, // the index of arenaStates to indicate where the icon belongs
-        top: event.clientY - arenaRef.current.getBoundingClientRect().y - 30,
-        left: event.clientX - arenaRef.current.getBoundingClientRect().x - 30, // CSS positioning for icon
+        top: event.clientY - arenaRef.current.getBoundingClientRect().y - 50,
+        left: event.clientX - arenaRef.current.getBoundingClientRect().x - 50, // CSS positioning for icon
+        width: 100,
+        height: 100,
         label: "", // will be used later if a user customize the icon with a custom label
         name: name, // name of the icon
         imgSrc: image,
@@ -429,8 +486,14 @@ function Arena (props) {
   }, [arenaStates, currentArena, selectedIcon]);
 
   // renders the current arenaState's icons
+  // takes the iconState and renders it into HTML elements
   function renderIcons() {
     return arenaStates[currentArena].map( (icon) => {
+      // if an icon is selected and is the current icon being rendered then returns true
+      // used for conditional rendering of certain icon properties
+      const isSelected = selectedIcon != null && 
+      icon.id === selectedIcon.id && 
+      icon.arena === selectedIcon.arena;
       return (
         <div
           id={icon.id}
@@ -439,9 +502,11 @@ function Arena (props) {
           style={{
             top: `${icon.top}px`, 
             left: `${icon.left}px`,
+            width: `${icon.width}px`,
+            height: `${icon.height}px`,
+            border: isSelected ? 
+              `black solid 1px` : 'none'
           }}
-          onMouseDown={onMouseDownHandler}
-          onMouseUp={onMouseUpHandler}
           >
           <label
             className='Arena-Icon-label'
@@ -452,9 +517,48 @@ function Arena (props) {
             id={icon.id}
             className='Arena-Icon-Img'
             src={icon.imgSrc}
+            style={{
+              width: `${icon.width-40}px`,
+              height: `${icon.height-40}px`,
+              top: `20px`,
+              left: `20px`,
+            }}
             alt={icon.name}
             draggable='false'
             onContextMenu={contextMenuHandler}
+            onMouseDown={onMouseDownHandler}
+            onMouseUp={onMouseUpHandler}
+          >
+          </img>
+          <img
+            id={icon.id}
+            className='Arena-Resize-Img'
+            src={resizeIconImg}
+            style={{
+              top: `${icon.height-20}px`,
+              left: `${icon.width-20}px`,
+              display: isSelected ?
+                'block' : 'none',
+            }}
+            alt={icon.name}
+            draggable='false'
+            onMouseDown={resizeOnMouseDownHandler}
+            onMouseUp={onMouseUpHandler}
+          >
+          </img>
+          <img
+            id={icon.id}
+            className='Arena-Rotate-Img'
+            src={rotateIconImg}
+            style={{
+              top: `${0}px`,
+              left: `${icon.width-20}px`,
+              display: isSelected ?
+              'block' : 'none',
+            }}
+            alt={icon.name}
+            draggable='false'
+            onMouseUp={onMouseUpHandler}
           >
           </img>
         </div>
@@ -470,6 +574,7 @@ function Arena (props) {
     onDrop={onDragDropHandler} // browser drag and drop API
     onContextMenu={(event) => event.preventDefault()}
     onClick={(event) => {setCustomContextMenu( (prevCustomContextMenu) => ({...prevCustomContextMenu, isShown: false}))}}
+    onMouseUp={onMouseUpHandler}
     >
       {renderIcons()}
       <Multistep
