@@ -46,7 +46,6 @@ io.on('connection', (socket) => {
   // icon edit
   socket.on('iconEdit', (editedIcon) => {
     console.log(`User: ${socket.id} edited an icon`);
-    // socket.broadcast.emit('iconEdit', editedIcon);
     socket.to(findRoomId(socket)).emit('iconEdit', editedIcon);
   });
 

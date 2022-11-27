@@ -148,7 +148,7 @@ function Arena (props) {
 
   // resize the icon image size when mouseDown on the resizeIconImg
   function resizeOnMouseDownHandler(mouseDownEvent) {
-    console.log('resizeOnMouseDownHandler')
+    console.log('resizeOnMouseDownHandler');
     console.log(mouseDownEvent);
     // find the icon that was clicked based on the ID
     let icon = null;
@@ -196,6 +196,59 @@ function Arena (props) {
       });
     };
   };
+
+  // rotate icon on mouseclick
+  function rotateOnMouseDownHandler(mouseDownEvent) {
+    console.log('rotateOnMouseDownHandler');
+    console.log(mouseDownEvent);
+    // find the icon that was clicked based on the ID
+    let icon = null;
+    for(let i = 0; i < arenaStates[currentArena].length; i++) {
+      if (arenaStates[currentArena][i].id === mouseDownEvent.currentTarget.id) {
+        icon = {...arenaStates[currentArena][i]};
+        break;
+      };
+      // error, icon should always be found
+      console.warn('Icon not found in function resizeOnMouseDownHandler');
+    };
+    // register rotateElement mouseMoveHandler to DOM
+    document.onmousemove = rotateElement;
+
+    // caculate x,y position of center of icon image
+    const iconCenterX = (icon.width/2) + icon.left + arenaRef.current.getBoundingClientRect().x;
+    const iconCenterY = (icon.height/2) + icon.top;
+
+    // rotates element on mouse movement
+    function rotateElement(mouseMoveEvent) {
+      // console.log(mouseMoveEvent);
+      let deltaX = mouseMoveEvent.clientX - iconCenterX;
+      let deltaY = mouseMoveEvent.clientY - iconCenterY;
+
+      let radians = Math.atan2(deltaX, deltaY);
+      let degrees = Math.round((radians * (180 / Math.PI) * -1) + 180) - 45;
+      console.log(`CenterX: ${iconCenterX}, CenterY: ${iconCenterY}, 
+        MouseX: ${mouseMoveEvent.clientX} MouseY: ${mouseMoveEvent.clientY}, 
+        Radians: ${radians}, Degrees: ${degrees}`);
+      // update icon's degrees
+      icon.degrees = degrees;
+      //notify server of icon rotation
+      socket.emit('iconEdit', icon);
+      // apply the update into arenaStates with setArenaStates and replace it with the new icon properties
+      setArenaStates( (prevArenaStates) => {
+        return prevArenaStates.map( (arenaState, index) => {
+          // find the arenaState
+          if (icon.arena === index) {
+            // return a new arenaState after updating it with the icon
+            return arenaState.map( (prevIcon) => {
+              return prevIcon.id === icon.id ? icon : prevIcon;
+            });
+          } else {
+            return arenaState;
+          };
+        });
+      });
+    };
+  };
  
   // spawns an icon from the dragged icon from IconList
   function onDragDropHandler(event) {
@@ -221,6 +274,7 @@ function Arena (props) {
         left: event.clientX - arenaRef.current.getBoundingClientRect().x - 50, // CSS positioning for icon
         width: 100,
         height: 100,
+        degrees: 0,
         label: "", // will be used later if a user customize the icon with a custom label
         name: name, // name of the icon
         imgSrc: image,
@@ -504,6 +558,7 @@ function Arena (props) {
             left: `${icon.left}px`,
             width: `${icon.width}px`,
             height: `${icon.height}px`,
+            transform: `rotate(${icon.degrees}deg)`,
             border: isSelected ? 
               `black solid 1px` : 'none'
           }}
@@ -558,6 +613,7 @@ function Arena (props) {
             }}
             alt={icon.name}
             draggable='false'
+            onMouseDown={rotateOnMouseDownHandler}
             onMouseUp={onMouseUpHandler}
           >
           </img>
