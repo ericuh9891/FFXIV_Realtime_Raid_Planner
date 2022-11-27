@@ -57,6 +57,7 @@ function Arena (props) {
    *   left: Number,
    *   width: Number,
    *   height: Number,
+   *   degrees: Number, // for use with CSS transform: rotate(deg)
    *   label: String,
    *   name: String,
    *   // may need to change it so that it points to a iconsList instead of hardcoded img src path from I think webpack.js compiling
