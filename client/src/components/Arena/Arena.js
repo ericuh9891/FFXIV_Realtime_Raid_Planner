@@ -584,6 +584,8 @@ function Arena (props) {
             left: `${icon.left}px`,
             width: `${icon.width}px`,
             height: `${icon.height}px`,
+            zIndex: isSelected ?
+              '1000' : `10`
           }}
           >
           <label
@@ -605,10 +607,9 @@ function Arena (props) {
               className='Arena-Icon-Img'
               src={icon.imgSrc}
               style={{
-                width: `${icon.width-40}px`,
-                height: `${icon.height-40}px`,
-                top: `20px`,
-                left: `20px`,
+                width: `${icon.width}px`,
+                height: `${icon.height}px`,
+                zIndex: `100`,
               }}
               alt={icon.name}
               draggable='false'
@@ -622,8 +623,8 @@ function Arena (props) {
               className='Arena-Resize-Img'
               src={resizeIconImg}
               style={{
-                top: `${icon.height-20}px`,
-                left: `${icon.width-20}px`,
+                top: `${icon.height}px`,
+                left: `${icon.width}px`,
                 display: isSelected ?
                   'block' : 'none',
               }}
@@ -638,8 +639,8 @@ function Arena (props) {
               className='Arena-Rotate-Img'
               src={rotateIconImg}
               style={{
-                top: `${0}px`,
-                left: `${icon.width-20}px`,
+                top: `${-20}px`,
+                left: `${icon.width}px`,
                 display: isSelected ?
                 'block' : 'none',
               }}
