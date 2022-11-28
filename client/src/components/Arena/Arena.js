@@ -584,9 +584,6 @@ function Arena (props) {
             left: `${icon.left}px`,
             width: `${icon.width}px`,
             height: `${icon.height}px`,
-            transform: `rotate(${icon.degrees}deg)`,
-            border: isSelected ? 
-              `black solid 1px` : 'none'
           }}
           >
           <label
@@ -594,55 +591,65 @@ function Arena (props) {
           >
             {icon.label}
           </label>
-          <img 
-            id={icon.id}
-            className='Arena-Icon-Img'
-            src={icon.imgSrc}
+          <div
             style={{
-              width: `${icon.width-40}px`,
-              height: `${icon.height-40}px`,
-              top: `20px`,
-              left: `20px`,
+              width: `${icon.width}px`,
+              height: `${icon.height}px`,
+              transform: `rotate(${icon.degrees}deg)`,
+              border: isSelected ? 
+                `black solid 1px` : 'none',
             }}
-            alt={icon.name}
-            draggable='false'
-            onContextMenu={contextMenuHandler}
-            onMouseDown={onMouseDownHandler}
-            onMouseUp={onMouseUpHandler}
           >
-          </img>
-          <img
-            id={icon.id}
-            className='Arena-Resize-Img'
-            src={resizeIconImg}
-            style={{
-              top: `${icon.height-20}px`,
-              left: `${icon.width-20}px`,
-              display: isSelected ?
+            <img 
+              id={icon.id}
+              className='Arena-Icon-Img'
+              src={icon.imgSrc}
+              style={{
+                width: `${icon.width-40}px`,
+                height: `${icon.height-40}px`,
+                top: `20px`,
+                left: `20px`,
+              }}
+              alt={icon.name}
+              draggable='false'
+              onContextMenu={contextMenuHandler}
+              onMouseDown={onMouseDownHandler}
+              onMouseUp={onMouseUpHandler}
+            >
+            </img>
+            <img
+              id={icon.id}
+              className='Arena-Resize-Img'
+              src={resizeIconImg}
+              style={{
+                top: `${icon.height-20}px`,
+                left: `${icon.width-20}px`,
+                display: isSelected ?
+                  'block' : 'none',
+              }}
+              alt={icon.name}
+              draggable='false'
+              onMouseDown={resizeOnMouseDownHandler}
+              onMouseUp={onMouseUpHandler}
+            >
+            </img>
+            <img
+              id={icon.id}
+              className='Arena-Rotate-Img'
+              src={rotateIconImg}
+              style={{
+                top: `${0}px`,
+                left: `${icon.width-20}px`,
+                display: isSelected ?
                 'block' : 'none',
-            }}
-            alt={icon.name}
-            draggable='false'
-            onMouseDown={resizeOnMouseDownHandler}
-            onMouseUp={onMouseUpHandler}
-          >
-          </img>
-          <img
-            id={icon.id}
-            className='Arena-Rotate-Img'
-            src={rotateIconImg}
-            style={{
-              top: `${0}px`,
-              left: `${icon.width-20}px`,
-              display: isSelected ?
-              'block' : 'none',
-            }}
-            alt={icon.name}
-            draggable='false'
-            onMouseDown={rotateOnMouseDownHandler}
-            onMouseUp={onMouseUpHandler}
-          >
-          </img>
+              }}
+              alt={icon.name}
+              draggable='false'
+              onMouseDown={rotateOnMouseDownHandler}
+              onMouseUp={onMouseUpHandler}
+            >
+            </img>
+          </div>
         </div>
       );
     });
