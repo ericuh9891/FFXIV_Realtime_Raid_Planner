@@ -147,10 +147,8 @@ function Arena (props) {
     document.onmousemove = null;
   };
 
-  // resize the icon image size when mouseDown on the resizeIconImg
+  // resize icon prototype
   function resizeOnMouseDownHandler(mouseDownEvent) {
-    console.log('resizeOnMouseDownHandler');
-    console.log(mouseDownEvent);
     // find the icon that was clicked based on the ID
     let icon = null;
     for(let i = 0; i < arenaStates[currentArena].length; i++) {
@@ -163,25 +161,45 @@ function Arena (props) {
     };
     // register a mouseMove handler onto the DOM maybe called resizeElement()
     document.onmousemove = resizeElement;
-    // copy starting width and height
-    const startWidth = icon.width;
-    const startHeight = icon.height;
-    // get the starting mouse position of x and y on mouse down
-    let startX = mouseDownEvent.clientX;
-    let startY = mouseDownEvent.clientY;
-
+    // copy icon starting positions
+    const iconStartLeft = icon.left;
+    const iconStartTop = icon.top;
+    // copy the starting icon's width and height
+    const iconStartWidth = icon.width;
+    const iconStartHeight = icon.height;
+    // copy the starting click position
+    const startX = mouseDownEvent.clientX;
+    const startY = mouseDownEvent.clientY;
+    // calculate the position of the icon's center
+    const iconCenterX = (icon.width/2) + icon.left + arenaRef.current.getBoundingClientRect().x;
+    const iconCenterY = (icon.height/2) + icon.top;
+    // calculate the position of the corner opposite of where the click started
+    const oppositeCornerX = (iconCenterX - startX) + iconCenterX;
+    const oppositeCornerY = (iconCenterY - startY) + iconCenterY;
+    // computes the distance based on two points
+    function getDistance(x1, y1, x2, y2) {
+      const y = x2 - x1;
+      const x = y2 - y1;
+      return Math.sqrt(x * x + y * y);
+    };
+    // get the distance of opposite corner to starting click position
+    const iconDiagonalDistance = getDistance(startX, startY, oppositeCornerX, oppositeCornerY);
+    // sanity check
+    // console.log(`Start: ${startX},${startY} Center: ${iconCenterX},${iconCenterY},` +
+    //   `OppositeCorner: ${oppositeCornerX},${oppositeCornerY},` +
+    //   `CornerDistances: ${iconDiagonalDistance}`);
     function resizeElement(mouseMoveEvent) {
-      // get the deltas of starting position to the current mouse position
-      let deltaX = startX - mouseMoveEvent.clientX;
-      let deltaY = startY - mouseMoveEvent.clientY;
-      // get the largest delta so the aspect ratio is maintained when appling to width and height
-      let maxDelta = Math.max(deltaX, deltaY);
-      // apply it to the icon size
-      icon.width = startWidth - maxDelta;
-      icon.height = startHeight - maxDelta;
-      // notify server of new icon width and height
+      // calculate the distance from start mousedown to current mouse position
+      const oppositeCornerToCurrentDistance = getDistance(oppositeCornerX, oppositeCornerY, mouseMoveEvent.clientX, mouseMoveEvent.clientY);
+      // scaler to modify the icon width and height
+      const scaler =  oppositeCornerToCurrentDistance / iconDiagonalDistance;
+      // modify and update icon height and width
+      icon.width = Math.round(iconStartWidth * scaler);
+      icon.height = Math.round(iconStartHeight * scaler);
+      // left and top of icon needs to be adjusted so icon stays centered while it's resizing
+      icon.left = iconStartLeft + ((iconStartWidth - icon.width) / 2);
+      icon.top = iconStartTop + ((iconStartHeight - icon.height) / 2);
       socket.emit('iconEdit', icon);
-      // apply the update into arenaStates with setArenaStates and replace it with the new icon properties
       setArenaStates( (prevArenaStates) => {
         return prevArenaStates.map( (arenaState, index) => {
           // find the arenaState
