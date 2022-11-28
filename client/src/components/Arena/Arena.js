@@ -486,13 +486,20 @@ function Arena (props) {
         return;
       }
       console.log(`Deleting step ${arenaIndex+1}`);
+      let shiftArenaIndex = false;
       setArenaStates( (prevArenaStates) => {
         // create a new copy of arenaStates
-        let newArenaStates = prevArenaStates.map( (arena) => arena);
-        // probably change this behaviour later, if user is editing an icon in an arena not being deleted, this would interrupt them
-        // but changing it to not unselect an icon would require reacquiring selectedIcon after arenaStates have shifted
-        setSelectedIcon(null);
-        // delete the arenaState/step
+        let newArenaStates = [...prevArenaStates];
+        // case of the icon being in the arenaState that's going to be deleted
+        if(arenaIndex === selectedIcon.arena){
+          setSelectedIcon(null);
+        }
+        // shift the selectedIcon's arena index to the left since the arena index is being shifted to the left
+        if(arenaIndex < selectedIcon.arena){
+          setSelectedIcon( (prevSelectedIcon) => {
+            return {...prevSelectedIcon, arena: prevSelectedIcon.arena - 1};
+          });
+        };
         newArenaStates.splice(arenaIndex, 1);
         // change arena if the currentArena is about to be deleted 
         if(currentArena >= arenaIndex && currentArena >= 1){
