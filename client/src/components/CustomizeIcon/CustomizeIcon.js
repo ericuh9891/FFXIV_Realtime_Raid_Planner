@@ -24,20 +24,33 @@ function CustomizeIcon(props) {
     props.updateIcon(currentIcon);
   };
 
+  function getSaves() {
+    let saves = [];
+    for(let i = 0; i < localStorage.length; ++i) {
+      saves.push((
+        <div>
+          {localStorage.key(i)}
+        </div>
+      ));
+    };
+    return saves;
+  };
+
   return (
     <div 
       className='CustomizeIcon'
       draggable='false'
     >
-      Icon Preview and Customization
-      <input
-        type='text'
-        placeholder='Label'
-        ref={labelRef}
-        onInput={onInputHandler}
-        value={currentIcon && currentIcon.label} // checks if a label value exists
-      >
-      </input>
+      {currentIcon !== null &&
+        <input
+          type='text'
+          placeholder='Label'
+          ref={labelRef}
+          onInput={onInputHandler}
+          value={currentIcon && currentIcon.label} // checks if a label value exists
+        >
+        </input>
+      }
       {currentIcon !== null &&
         <img
           className='CustomizeIcon-Icon'
@@ -46,6 +59,15 @@ function CustomizeIcon(props) {
           draggable='false'
         >
         </img>
+      }
+      {props.loadState &&
+      currentIcon == null &&
+        <div
+          className='CustomizeIcon-Load'
+          draggable='false'
+        >
+          {getSaves()}
+        </div>
       }
     </div>
   );

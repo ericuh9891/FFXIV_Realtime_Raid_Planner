@@ -35,3 +35,30 @@
   height: 20px;
   background-color: whitesmoke;
 }
+
+.Arena-States-Container {
+  position: absolute;
+  width: 1080px;
+  top: 720px;
+  left: -360px;
+  background-color: grey;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.Arena-Save-Load-Container {
+  height: 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.Arena-Save-Load {
+  width: 40px;
+  height: 20px;
+  margin: 0;
+  display: inline;
+  vertical-align: middle;
+  
+  border: 2px solid black;
+}

@@ -36,19 +36,24 @@ function Multistep(props) {
         </div>
       ),
       (
+      <div
+        className='Multistep-step unselected'
+        id={'deleteStep'}
+        key={'deleteStep'}
+      >
         <img
-          className='Multistep-step unselected'
-          id={'deleteStep'}
-          key={'deleteStep'}
+          className='trashbin unselected'
           alt='Trashbin Icon'
           src={trashIcon}
           onClick={(event) => props.multistepDeleteArenaState(event)}
         >
         </img>
+      </div>
       )
     );
     return steps;
   };
+
   return (
     <div
       className='Multistep'

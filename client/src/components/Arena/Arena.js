@@ -75,8 +75,9 @@ function Arena (props) {
   // references icon id and arena id in arenaState as object literal eg. {id: Number, arena: Number}
   const [selectedIcon, setSelectedIcon] = React.useState(null); 
   const [room, setRoom] = React.useState(''); // may be useful later if I decide to refactor to client keeping track of rooms
-  // controls when to display custom context menu
+  // controls when to display custom context menu aka right click
   const [customContextMenu, setCustomContextMenu] = React.useState({top: 0, left: 0, isShown: false});
+  const [loadState, setLoadState] = React.useState(false);
   const arenaRef = React.useRef();
 
   /*** Event Handlers */
@@ -417,7 +418,6 @@ function Arena (props) {
 
   /*** socket.io listeners */
   React.useEffect( () => {
-
     socket.on('iconSpawn', (icon) => {
       console.log('Adding new icon');
       setArenaStates( (prevArenaStates) => {
@@ -565,6 +565,43 @@ function Arena (props) {
     };
   }, [arenaStates, currentArena, selectedIcon]);
 
+  /*** LocalStorage handling */
+  // localstorage last arenaStates persistence
+  React.useEffect( () => {
+    localStorage.setItem('Auto Save', arenaStates);
+  }, [arenaStates]);
+
+  React.useEffect( () => {
+    if (selectedIcon != null) {
+      setLoadState(false);
+    }
+  }, [selectedIcon]);
+
+  function getTimeStamp() {
+    const currentDate = new Date();
+
+    const day = currentDate.getDay();
+    const month = currentDate.getMonth() + 1;
+    const year = currentDate.getFullYear();
+
+    const hours = currentDate.getHours();
+    const minutes = currentDate.getMinutes();
+    const seconds = currentDate.getSeconds();
+
+    return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`;
+  }
+
+  function saveHandler(event) {
+    localStorage.setItem(getTimeStamp(), arenaStates);
+  }
+
+  function loadHandler(event) {
+    setSelectedIcon(null);
+    setLoadState( (prevLoadState) => {
+      return !prevLoadState;
+    });
+  };
+
   // renders the current arenaState's icons
   // takes the iconState and renders it into HTML elements
   function renderIcons() {
@@ -667,19 +704,38 @@ function Arena (props) {
     onMouseUp={onMouseUpHandler}
     >
       {renderIcons()}
-      <Multistep
-        multistepAddArenaState={multistepAddArenaState}
-        setCurrentArena={setCurrentArena}
-        multistepDeleteArenaState={multistepDeleteArenaState}
-        arenaStates={arenaStates}
-        currentArena={currentArena}
-      ></Multistep>
+      <div className='Arena-States-Container'>
+        <Multistep
+          multistepAddArenaState={multistepAddArenaState}
+          setCurrentArena={setCurrentArena}
+          multistepDeleteArenaState={multistepDeleteArenaState}
+          arenaStates={arenaStates}
+          currentArena={currentArena}
+        ></Multistep>
+        <div
+          className='Arena-Save-Load-Container'
+        >
+          <div
+            className='Arena-Save-Load'
+            onClick={saveHandler}
+          >
+            Save
+          </div>
+          <div
+            className='Arena-Save-Load'
+            onClick={loadHandler}
+          >
+            Load
+          </div>
+        </div>
+      </div>
       {`Current room: ${room}`}
       <CustomizeIcon
         arenaStates={arenaStates}
         selectedIcon={selectedIcon}
         updateIcon={customizeIconUpdateHandler}
         socket={socket}
+        loadState={loadState}
       ></CustomizeIcon>
       {customContextMenu.isShown &&
         <CustomContextMenu
