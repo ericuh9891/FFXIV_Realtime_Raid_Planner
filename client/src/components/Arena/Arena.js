@@ -6,6 +6,7 @@ import CustomContextMenu from '../CustomContextMenu/CustomContextMenu';
 
 import resizeIconImg from './resizeIcon.png';
 import rotateIconImg from './rotateIcon.png';
+import gridImg from './Grid.jpg';
 
 // may need to move this to App component in the future if socket is needed in higher level components
 import io from 'socket.io-client'; 
@@ -597,7 +598,12 @@ function Arena (props) {
     const minutes = currentDate.getMinutes();
     const seconds = currentDate.getSeconds();
 
-    return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`;
+    function prependZero(time) {
+      return time < 10 ? `0${time}` : `${time}`;
+    }
+
+    return `${day}/${month}/${year} - 
+      ${prependZero(hours)}:${prependZero(minutes)}:${prependZero(seconds)}`;
   }
 
   function saveHandler(event) {
@@ -714,13 +720,6 @@ function Arena (props) {
     >
       {renderIcons()}
       <div className='Arena-States-Container'>
-        <Multistep
-          multistepAddArenaState={multistepAddArenaState}
-          setCurrentArena={setCurrentArena}
-          multistepDeleteArenaState={multistepDeleteArenaState}
-          arenaStates={arenaStates}
-          currentArena={currentArena}
-        ></Multistep>
         <div
           className='Arena-Save-Load-Container'
         >
@@ -735,10 +734,17 @@ function Arena (props) {
             onClick={loadHandler}
           >
             Load
-          </div>
+        </div>
+        <Multistep
+          multistepAddArenaState={multistepAddArenaState}
+          setCurrentArena={setCurrentArena}
+          multistepDeleteArenaState={multistepDeleteArenaState}
+          arenaStates={arenaStates}
+          currentArena={currentArena}
+        ></Multistep>
         </div>
       </div>
-      {`Current room: ${room}`}
+      {/* {`Current room: ${room}`} */}
       <CustomizeIcon
         arenaStates={arenaStates}
         selectedIcon={selectedIcon}
@@ -754,6 +760,15 @@ function Arena (props) {
         >
         </CustomContextMenu>
       }
+      <img
+        className='Arena-Image'
+        src={gridImg}
+        style={{
+          clipPath:`circle()`
+        }}
+      >
+        
+      </img>
     </div>
   );
 };

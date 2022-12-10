@@ -4,6 +4,7 @@
   width: 360px;
   height: 360px;
   user-select: none;
+  background-color: #212121;
 }
 
 .IconList-selection {

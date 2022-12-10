@@ -4,7 +4,7 @@
   top: 360px;
   width: 360px;
   height: 360px;
-  background-color: chartreuse;
+  background-color: rgb(54, 50, 50);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,7 +19,7 @@
 .CustomizeIcon-Saves {
   display: flex;
   flex-direction: column;
-  
+  background-color: rgba(228, 223, 214, 0.986);
 }
 
 .Arena-Saves {
