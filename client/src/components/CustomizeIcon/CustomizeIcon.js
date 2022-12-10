@@ -1,6 +1,8 @@
 import React from 'react';
 import './CustomizeIcon.css';
 
+import trashIcon from './trashIcon.png'
+
 function CustomizeIcon(props) {
   // find the icon in arenaState
   function findIcon() {
@@ -26,14 +28,39 @@ function CustomizeIcon(props) {
 
   function getSaves() {
     let saves = [];
+    // get the name of the keys
     for(let i = 0; i < localStorage.length; ++i) {
-      saves.push((
-        <div>
-          {localStorage.key(i)}
+      saves.push(localStorage.key(i));
+    }
+    saves.sort().reverse();
+    // convert the name of keys into JSX elements
+    return saves.map( (key) => {
+      return (
+        <div
+          className='Arena-Saves'
+          id={key}
+          key={key}
+          onClick={(event) => props.onLoadSaveHandler(event)}
+        >
+          {key != 'Auto Save' &&
+            <img
+            id={key}
+            key={key}
+            className='Arena-Saves-Trashbin'
+            src={trashIcon}
+            alt='Delete Save'
+            onClick={onDeleteSaveHandler}
+            >
+            </img>
+          }
+          {key}
         </div>
-      ));
-    };
-    return saves;
+      );
+    });
+  };
+
+  function onDeleteSaveHandler(event) {
+    localStorage.removeItem(event.target.id);
   };
 
   return (
@@ -63,7 +90,7 @@ function CustomizeIcon(props) {
       {props.loadState &&
       currentIcon == null &&
         <div
-          className='CustomizeIcon-Load'
+          className='CustomizeIcon-Saves'
           draggable='false'
         >
           {getSaves()}

@@ -568,8 +568,17 @@ function Arena (props) {
   /*** LocalStorage handling */
   // localstorage last arenaStates persistence
   React.useEffect( () => {
-    localStorage.setItem('Auto Save', arenaStates);
-  }, [arenaStates]);
+    localStorage.setItem('Auto Save', JSON.stringify(arenaStates));
+  }, [selectedIcon]);
+
+  // called by CustomizeIcon component to load an saved arenaState from localstorage
+  function onLoadSaveHandler(event) {
+    console.log(event);
+    const arenaState = localStorage.getItem(event.target.id);
+    console.log(arenaState);
+    setCurrentArena(0);
+    setArenaStates([...JSON.parse(arenaState)]);
+  };
 
   React.useEffect( () => {
     if (selectedIcon != null) {
@@ -592,7 +601,7 @@ function Arena (props) {
   }
 
   function saveHandler(event) {
-    localStorage.setItem(getTimeStamp(), arenaStates);
+    localStorage.setItem(getTimeStamp(), JSON.stringify(arenaStates));
   }
 
   function loadHandler(event) {
@@ -736,6 +745,7 @@ function Arena (props) {
         updateIcon={customizeIconUpdateHandler}
         socket={socket}
         loadState={loadState}
+        onLoadSaveHandler={onLoadSaveHandler}
       ></CustomizeIcon>
       {customContextMenu.isShown &&
         <CustomContextMenu

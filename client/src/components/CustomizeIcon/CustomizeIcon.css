@@ -15,3 +15,18 @@
   width: 60px;
   height: 60px;
 }
+
+.CustomizeIcon-Saves {
+  display: flex;
+  flex-direction: column;
+  
+}
+
+.Arena-Saves {
+  border-style: solid solid solid;
+}
+
+.Arena-Saves-Trashbin {
+  width: 16px;
+  height: 16px;
+}
