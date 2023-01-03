@@ -296,7 +296,7 @@ function Arena (props) {
         width: 100,
         height: 100,
         degrees: 0,
-        label: "", // will be used later if a user customize the icon with a custom label
+        label: "",
         name: name, // name of the icon
         imgSrc: image,
       };
@@ -763,6 +763,7 @@ function Arena (props) {
       <img
         className='Arena-Image'
         src={gridImg}
+        draggable={false}
         style={{
           clipPath:`circle()`
         }}
